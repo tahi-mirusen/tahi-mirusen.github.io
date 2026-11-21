@@ -15,10 +15,16 @@
 
   <style>
     :root {
-      font-family: "Noto Sans JP", sans-serif;
-      color: #253041;
-      background: #f6f8fb;
-      line-height: 1.8;
+      --page-bg: #f6f8fb;
+      --text-color: #253041;
+      --card-bg: #ffffff;
+      --accent: #315ed2;
+      --header-bg: #ffffff;
+      --border-color: #e5eaf0;
+      --site-width: 960px;
+      --text-size: 16px;
+      --card-radius: 14px;
+      --content-align: left;
     }
 
     * {
@@ -27,15 +33,23 @@
 
     body {
       margin: 0;
+      color: var(--text-color);
+      background-color: var(--page-bg);
+      background-position: center;
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: var(--text-size);
+      line-height: 1.8;
     }
 
     header {
-      background: #fff;
-      border-bottom: 1px solid #e5eaf0;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
     }
 
     .wrap {
-      width: min(960px, calc(100% - 32px));
+      width: min(var(--site-width), calc(100% - 32px));
       margin: auto;
     }
 
@@ -57,12 +71,10 @@
     }
 
     h2 {
-      margin-bottom: 16px;
       font-size: 1.35rem;
     }
 
     h3 {
-      margin-bottom: 8px;
       font-size: 1.1rem;
     }
 
@@ -70,21 +82,20 @@
       padding: 32px 0 64px;
     }
 
-    section {
-      margin-bottom: 32px;
-    }
-
     .card {
       padding: 24px;
       margin-bottom: 16px;
-      background: #fff;
-      border: 1px solid #e5eaf0;
-      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(240px, 100%), 1fr)
+      );
       gap: 16px;
     }
 
@@ -98,13 +109,11 @@
     }
 
     a {
-      color: #315ed2;
+      color: var(--accent);
       overflow-wrap: anywhere;
     }
 
-    button,
-    input,
-    textarea {
+    button, input, textarea, select {
       font: inherit;
     }
 
@@ -128,8 +137,8 @@
     }
 
     button:disabled {
-      cursor: wait;
-      opacity: 0.6;
+      cursor: not-allowed;
+      opacity: 0.55;
     }
 
     label {
@@ -138,8 +147,7 @@
       font-weight: 500;
     }
 
-    input,
-    textarea {
+    input, textarea, select {
       display: block;
       width: 100%;
       margin-top: 5px;
@@ -148,6 +156,17 @@
       background: #fff;
       border: 1px solid #cdd6e1;
       border-radius: 8px;
+    }
+
+    input[type="color"] {
+      height: 44px;
+      padding: 4px;
+    }
+
+    input[type="checkbox"] {
+      display: inline-block;
+      width: auto;
+      margin: 0 8px 0 0;
     }
 
     textarea {
@@ -179,11 +198,19 @@
       border-radius: 10px;
     }
 
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(180px, 100%), 1fr)
+      );
+      gap: 0 16px;
+    }
+
     [hidden] {
       display: none !important;
     }
 
-    /* 公開ページの左メニュー */
     #public-view {
       display: grid;
       grid-template-columns: 180px minmax(0, 1fr);
@@ -195,15 +222,15 @@
       position: sticky;
       top: 24px;
       padding: 16px;
-      background: #fff;
-      border: 1px solid #e5eaf0;
-      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
     }
 
     .site-nav a {
       display: block;
       padding: 10px 12px;
-      color: #253041;
+      color: var(--text-color);
       text-decoration: none;
       border-radius: 8px;
     }
@@ -211,12 +238,35 @@
     .site-nav a:hover,
     .site-nav a:focus-visible,
     .site-nav a[aria-current="page"] {
-      color: #315ed2;
-      background: #f0f4ff;
+      color: var(--accent);
+      background: rgba(128, 128, 128, 0.12);
     }
 
-    .public-content section {
-      scroll-margin-top: 24px;
+    .public-content {
+      min-width: 0;
+      text-align: var(--content-align);
+    }
+
+    .public-image {
+      display: block;
+      max-width: 100%;
+      max-height: 500px;
+      margin: 0 auto 16px;
+      border-radius: var(--card-radius);
+      object-fit: contain;
+    }
+
+    #admin-view {
+      color: #253041;
+    }
+
+    #admin-view .card {
+      background: #fff;
+      border-color: #e5eaf0;
+    }
+
+    #admin-view a {
+      color: #315ed2;
     }
 
     @media (max-width: 640px) {
@@ -247,30 +297,8 @@
 
   <main class="wrap">
     <div id="public-view">
-      <nav class="site-nav" aria-label="サイトメニュー">
-        <a href="#about" aria-current="page">自己紹介</a>
-        <a href="#works-section">作品</a>
-        <a href="#blog-section">ブログ</a>
-      </nav>
-
-      <div class="public-content">
-        <section id="about">
-          <h2>自己紹介</h2>
-          <div class="card">
-            <p id="profile" class="multiline"></p>
-          </div>
-        </section>
-
-        <section id="works-section" hidden>
-          <h2>作品</h2>
-          <div id="works" class="grid"></div>
-        </section>
-
-        <section id="blog-section" hidden>
-          <h2>ブログ</h2>
-          <div id="posts"></div>
-        </section>
-      </div>
+      <nav id="site-nav" class="site-nav" aria-label="サイトメニュー"></nav>
+      <div id="public-content" class="public-content"></div>
     </div>
 
     <div id="admin-view" hidden>
@@ -284,7 +312,8 @@
       <div class="card">
         <h3>GitHubに接続</h3>
         <p class="hint">
-          トークンはこの画面を開いている間だけ使用し、サイトのデータには保存しません。
+          トークンは接続中だけ使用し、サイトのデータには保存しません。
+          このページを閉じるか「サイトに戻る」を押すと接続を解除します。
         </p>
 
         <label>
@@ -323,6 +352,32 @@
             自己紹介
             <textarea id="edit-profile"></textarea>
           </label>
+
+          <div id="profile-image-editor"></div>
+        </div>
+
+        <div class="card">
+          <h3>デザイン</h3>
+          <p class="hint">
+            色・サイズなどを変更できます。変更内容はサイトに戻ると確認できます。
+          </p>
+          <div id="design-editor" class="settings-grid"></div>
+          <div id="background-editor"></div>
+          <button id="reset-design" class="secondary" type="button">
+            デザインを初期設定に戻す
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>メニューと項目</h3>
+          <p class="hint">
+            項目名、表示・非表示、並び順を変更できます。
+            文章や画像を載せる項目も追加できます。
+          </p>
+          <div id="section-editor"></div>
+          <button id="add-section" class="secondary" type="button">
+            項目を追加
+          </button>
         </div>
 
         <div class="card">
@@ -346,7 +401,7 @@
             <button id="save" type="button">変更を保存して公開</button>
           </div>
           <p class="hint">
-            ファイルのアップロード後も、このボタンで作品情報を保存してください。
+            画像やファイルのアップロード後も、このボタンで内容を保存してください。
             公開サイトへの反映には少し時間がかかる場合があります。
           </p>
         </div>
@@ -359,11 +414,49 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
+    const defaultDesign = () => ({
+      pageBg: "#f6f8fb",
+      textColor: "#253041",
+      cardBg: "#ffffff",
+      accent: "#315ed2",
+      headerBg: "#ffffff",
+      borderColor: "#e5eaf0",
+      width: 960,
+      textSize: 16,
+      radius: 14,
+      align: "left",
+      backgroundImage: ""
+    });
+
+    const defaultSections = () => [
+      {
+        id: "about",
+        type: "about",
+        title: "自己紹介",
+        visible: true
+      },
+      {
+        id: "works-section",
+        type: "works",
+        title: "作品",
+        visible: true
+      },
+      {
+        id: "blog-section",
+        type: "blog",
+        title: "ブログ",
+        visible: true
+      }
+    ];
+
     const initialData = () => ({
       siteName: "マイサイト",
       profile: "ここに自己紹介を書きます。",
+      profileImage: "",
       works: [],
-      posts: []
+      posts: [],
+      design: defaultDesign(),
+      sections: defaultSections()
     });
 
     let data = initialData();
@@ -371,17 +464,35 @@
     let busy = false;
 
     function normalize(value) {
+      const source = value && typeof value === "object" ? value : {};
+      const defaults = initialData();
+
       return {
-        siteName: String(value?.siteName || "マイサイト"),
-        profile: String(value?.profile || ""),
-        works: Array.isArray(value?.works) ? value.works : [],
-        posts: Array.isArray(value?.posts) ? value.posts : []
+        ...source,
+        siteName: String(source.siteName || defaults.siteName),
+        profile: String(source.profile || ""),
+        profileImage: String(source.profileImage || ""),
+        works: Array.isArray(source.works)
+          ? source.works.filter((item) => item && typeof item === "object")
+          : [],
+        posts: Array.isArray(source.posts)
+          ? source.posts.filter((item) => item && typeof item === "object")
+          : [],
+        design: {
+          ...defaultDesign(),
+          ...(source.design && typeof source.design === "object"
+            ? source.design
+            : {})
+        },
+        sections: Array.isArray(source.sections)
+          ? source.sections.filter((item) => item && typeof item === "object")
+          : defaultSections()
       };
     }
 
     function element(tag, text, className) {
       const node = document.createElement(tag);
-      if (text !== undefined) node.textContent = text;
+      if (text !== undefined) node.textContent = String(text);
       if (className) node.className = className;
       return node;
     }
@@ -400,79 +511,232 @@
       }
     }
 
-    /* 左メニューで表示する項目を切り替え */
-    function showPublicSection() {
-      const sectionIds = ["about", "works-section", "blog-section"];
-      const requestedId = window.location.hash.slice(1);
-      const selectedId = sectionIds.includes(requestedId)
-        ? requestedId
-        : "about";
-
-      sectionIds.forEach((id) => {
-        $(id).hidden = id !== selectedId;
-      });
-
-      document.querySelectorAll(".site-nav a").forEach((link) => {
-        if (link.getAttribute("href") === `#${selectedId}`) {
-          link.setAttribute("aria-current", "page");
-        } else {
-          link.removeAttribute("aria-current");
-        }
-      });
+    function validColor(value, fallback) {
+      return /^#[0-9a-f]{6}$/i.test(String(value)) ? value : fallback;
     }
 
-    window.addEventListener("hashchange", showPublicSection);
-    showPublicSection();
+    function boundedNumber(value, fallback, min, max) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(max, Math.max(min, number));
+    }
+
+    function applyDesign() {
+      const design = data.design;
+      const defaults = defaultDesign();
+      const root = document.documentElement;
+
+      root.style.setProperty(
+        "--page-bg",
+        validColor(design.pageBg, defaults.pageBg)
+      );
+      root.style.setProperty(
+        "--text-color",
+        validColor(design.textColor, defaults.textColor)
+      );
+      root.style.setProperty(
+        "--card-bg",
+        validColor(design.cardBg, defaults.cardBg)
+      );
+      root.style.setProperty(
+        "--accent",
+        validColor(design.accent, defaults.accent)
+      );
+      root.style.setProperty(
+        "--header-bg",
+        validColor(design.headerBg, defaults.headerBg)
+      );
+      root.style.setProperty(
+        "--border-color",
+        validColor(design.borderColor, defaults.borderColor)
+      );
+      root.style.setProperty(
+        "--site-width",
+        `${boundedNumber(design.width, 960, 600, 1600)}px`
+      );
+      root.style.setProperty(
+        "--text-size",
+        `${boundedNumber(design.textSize, 16, 12, 28)}px`
+      );
+      root.style.setProperty(
+        "--card-radius",
+        `${boundedNumber(design.radius, 14, 0, 50)}px`
+      );
+      root.style.setProperty(
+        "--content-align",
+        ["left", "center", "right"].includes(design.align)
+          ? design.align
+          : "left"
+      );
+
+      const background = safeLink(design.backgroundImage);
+      document.body.style.backgroundImage = background
+        ? `url(${JSON.stringify(background)})`
+        : "none";
+    }
+
+    function appendImage(parent, source, alt) {
+      const url = safeLink(source);
+      if (!url) return;
+
+      const image = document.createElement("img");
+      image.className = "public-image";
+      image.src = url;
+      image.alt = alt || "";
+      image.loading = "lazy";
+      parent.append(image);
+    }
+
+    function appendLink(parent, source, text) {
+      const url = safeLink(source);
+      if (!url) return;
+
+      const link = element("a", text);
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      parent.append(link);
+    }
 
     function renderPublic() {
-      document.title = data.siteName;
-      $("site-name").textContent = data.siteName;
-      $("profile").textContent = data.profile;
+      applyDesign();
 
-      const works = $("works");
-      works.replaceChildren();
+      document.title = data.siteName || "マイサイト";
+      $("site-name").textContent = data.siteName || "マイサイト";
 
-      data.works.forEach((work) => {
-        const card = element("article", undefined, "card");
-        card.append(element("h3", work.title || "無題"));
-        card.append(element("p", work.description || "", "multiline"));
+      const nav = $("site-nav");
+      const content = $("public-content");
+      nav.replaceChildren();
+      content.replaceChildren();
 
-        const url = safeLink(work.file);
-        if (url) {
-          const link = element("a", "ファイルを開く・ダウンロード");
-          link.href = url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          card.append(link);
+      const visibleSections = data.sections.filter(
+        (section) => section.visible !== false && section.id
+      );
+
+      const requestedId = window.location.hash.slice(1);
+      const selected = visibleSections.find(
+        (section) => section.id === requestedId
+      ) || visibleSections[0];
+
+      visibleSections.forEach((section) => {
+        const link = element("a", section.title || "項目");
+        link.href = `#${section.id}`;
+
+        if (selected && section.id === selected.id) {
+          link.setAttribute("aria-current", "page");
         }
 
-        works.append(card);
+        nav.append(link);
       });
 
-      const posts = $("posts");
-      posts.replaceChildren();
+      if (!selected) {
+        content.append(element("p", "表示する項目がありません。"));
+        return;
+      }
 
-      data.posts.forEach((post) => {
-        const card = element("article", undefined, "card");
-        card.append(element("h3", post.title || "無題"));
+      const sectionNode = document.createElement("section");
+      sectionNode.id = selected.id;
+      sectionNode.append(element("h2", selected.title || "項目"));
 
-        if (post.date) {
-          card.append(element("p", post.date, "hint"));
+      if (selected.type === "about") {
+        const card = element("div", undefined, "card");
+        appendImage(card, data.profileImage, "プロフィール画像");
+        card.append(element("p", data.profile, "multiline"));
+        sectionNode.append(card);
+      }
+
+      if (selected.type === "works") {
+        const grid = element("div", undefined, "grid");
+
+        data.works.forEach((work) => {
+          const card = element("article", undefined, "card");
+          appendImage(card, work.image, work.title || "作品画像");
+          card.append(element("h3", work.title || "無題"));
+          card.append(element("p", work.description || "", "multiline"));
+          appendLink(card, work.file, "ファイルを開く・ダウンロード");
+          grid.append(card);
+        });
+
+        sectionNode.append(grid);
+      }
+
+      if (selected.type === "blog") {
+        data.posts.forEach((post) => {
+          const card = element("article", undefined, "card");
+          card.append(element("h3", post.title || "無題"));
+
+          if (post.date) {
+            card.append(element("p", post.date, "hint"));
+          }
+
+          appendImage(card, post.image, post.title || "記事画像");
+          card.append(element("p", post.body || "", "multiline"));
+          sectionNode.append(card);
+        });
+      }
+
+      if (selected.type === "custom") {
+        const card = element("div", undefined, "card");
+        appendImage(card, selected.image, selected.title || "画像");
+        card.append(element("p", selected.body || "", "multiline"));
+
+        if (selected.link) {
+          appendLink(card, selected.link, selected.linkText || "リンクを開く");
         }
 
-        card.append(element("p", post.body || "", "multiline"));
-        posts.append(card);
-      });
+        sectionNode.append(card);
+      }
+
+      content.append(sectionNode);
     }
 
-    function field(parent, labelText, value, onInput, multiline = false) {
+    window.addEventListener("hashchange", renderPublic);
+
+    function field(parent, labelText, value, onInput, options = {}) {
       const label = element("label", labelText);
-      const input = document.createElement(multiline ? "textarea" : "input");
-      input.value = value || "";
+      const input = document.createElement(
+        options.multiline ? "textarea" : "input"
+      );
+
+      if (options.type) input.type = options.type;
+      if (options.min !== undefined) input.min = options.min;
+      if (options.max !== undefined) input.max = options.max;
+
+      input.value = value ?? "";
       input.addEventListener("input", () => onInput(input.value));
+
       label.append(input);
       parent.append(label);
       return input;
+    }
+
+    function selectField(parent, labelText, value, choices, onChange) {
+      const label = element("label", labelText);
+      const select = document.createElement("select");
+
+      choices.forEach(([choiceValue, choiceText]) => {
+        const option = element("option", choiceText);
+        option.value = choiceValue;
+        select.append(option);
+      });
+
+      select.value = value;
+      select.addEventListener("change", () => onChange(select.value));
+
+      label.append(select);
+      parent.append(label);
+    }
+
+    function checkboxField(parent, labelText, checked, onChange) {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+
+      input.type = "checkbox";
+      input.checked = checked;
+      input.addEventListener("change", () => onChange(input.checked));
+
+      label.append(input, document.createTextNode(labelText));
+      parent.append(label);
     }
 
     function setStatus(message) {
@@ -481,131 +745,15 @@
 
     function setBusy(value) {
       busy = value;
-      $("connect").disabled = value;
-      $("save").disabled = value;
-      document.querySelectorAll(".upload-button").forEach((button) => {
+
+      document.querySelectorAll("#admin-view button").forEach((button) => {
         button.disabled = value;
       });
-    }
 
-    function renderEditors() {
-      $("edit-name").value = data.siteName;
-      $("edit-profile").value = data.profile;
-
-      const workEditor = $("work-editor");
-      workEditor.replaceChildren();
-
-      data.works.forEach((work, index) => {
-        const box = element("div", undefined, "editor-item");
-        box.append(element("h3", `作品 ${index + 1}`));
-
-        field(box, "タイトル", work.title, (value) => {
-          work.title = value;
+      document.querySelectorAll("#admin-view input, #admin-view textarea, #admin-view select")
+        .forEach((input) => {
+          input.disabled = value;
         });
-
-        field(box, "説明", work.description, (value) => {
-          work.description = value;
-        }, true);
-
-        const filePath = field(
-          box,
-          "ファイルのURLまたはパス",
-          work.file,
-          (value) => {
-            work.file = value;
-          }
-        );
-
-        const fileLabel = element("label", "ファイルを選択");
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileLabel.append(fileInput);
-        box.append(fileLabel);
-
-        const actions = element("div", undefined, "actions");
-
-        const uploadButton = element("button", "ファイルをアップロード");
-        uploadButton.type = "button";
-        uploadButton.className = "upload-button";
-        uploadButton.disabled = busy;
-
-        uploadButton.addEventListener("click", async () => {
-          const file = fileInput.files[0];
-
-          if (!file) {
-            setStatus("アップロードするファイルを選択してください。");
-            return;
-          }
-
-          if (file.size > 5 * 1024 * 1024) {
-            setStatus("この画面からアップロードできるのは5MBまでです。");
-            return;
-          }
-
-          setBusy(true);
-          setStatus("ファイルをアップロードしています…");
-
-          try {
-            const extension = file.name.match(/\.[a-zA-Z0-9]{1,10}$/)?.[0] || "";
-            const id = crypto.randomUUID();
-            const path = `uploads/${id}${extension.toLowerCase()}`;
-            const bytes = new Uint8Array(await file.arrayBuffer());
-
-            await putFile(path, bytesToBase64(bytes), "作品ファイルを追加");
-
-            work.file = path;
-            filePath.value = path;
-            setStatus("ファイルをアップロードしました。変更を保存して公開してください。");
-          } catch (error) {
-            setStatus(`アップロードできませんでした: ${error.message}`);
-          } finally {
-            setBusy(false);
-          }
-        });
-
-        const remove = element("button", "この作品を削除");
-        remove.type = "button";
-        remove.className = "danger";
-        remove.addEventListener("click", () => {
-          data.works.splice(index, 1);
-          renderEditors();
-        });
-
-        actions.append(uploadButton, remove);
-        box.append(actions);
-        workEditor.append(box);
-      });
-
-      const postEditor = $("post-editor");
-      postEditor.replaceChildren();
-
-      data.posts.forEach((post, index) => {
-        const box = element("div", undefined, "editor-item");
-        box.append(element("h3", `記事 ${index + 1}`));
-
-        field(box, "タイトル", post.title, (value) => {
-          post.title = value;
-        });
-
-        field(box, "日付", post.date, (value) => {
-          post.date = value;
-        });
-
-        field(box, "本文", post.body, (value) => {
-          post.body = value;
-        }, true);
-
-        const remove = element("button", "この記事を削除");
-        remove.type = "button";
-        remove.className = "danger";
-        remove.addEventListener("click", () => {
-          data.posts.splice(index, 1);
-          renderEditors();
-        });
-
-        box.append(remove);
-        postEditor.append(box);
-      });
     }
 
     function bytesToBase64(bytes) {
@@ -613,7 +761,9 @@
       const chunkSize = 8192;
 
       for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        binary += String.fromCharCode(
+          ...bytes.subarray(i, i + chunkSize)
+        );
       }
 
       return btoa(binary);
@@ -626,166 +776,38 @@
     }
 
     function apiPath(path) {
-      const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+      const encodedPath = path
+        .split("/")
+        .map(encodeURIComponent)
+        .join("/");
+
       return `https://api.github.com/repos/${encodeURIComponent(connection.owner)}/${encodeURIComponent(connection.repo)}/contents/${encodedPath}`;
     }
 
     async function githubRequest(url, options = {}) {
+      const { allow404, ...fetchOptions } = options;
+
       const response = await fetch(url, {
-        ...options,
+        ...fetchOptions,
         headers: {
           "Accept": "application/vnd.github+json",
           "Authorization": `Bearer ${connection.token}`,
           "Content-Type": "application/json",
-          ...options.headers
+          ...fetchOptions.headers
         }
       });
 
-      if (response.status === 404 && options.allow404) return null;
+      if (response.status === 404 && allow404) return null;
 
       const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(result.message || `GitHubエラー: ${response.status}`);
+        throw new Error(
+          result.message || `GitHubエラー: ${response.status}`
+        );
       }
 
       return result;
     }
 
-    async function getFile(path) {
-      const url = `${apiPath(path)}?ref=${encodeURIComponent(connection.branch)}`;
-      return githubRequest(url, { allow404: true });
-    }
-
-    async function putFile(path, content, message) {
-      const existing = await getFile(path);
-      const body = {
-        message,
-        content,
-        branch: connection.branch
-      };
-
-      if (existing?.sha) body.sha = existing.sha;
-
-      return githubRequest(apiPath(path), {
-        method: "PUT",
-        body: JSON.stringify(body)
-      });
-    }
-
-    $("open-admin").addEventListener("click", () => {
-      $("public-view").hidden = true;
-      $("admin-view").hidden = false;
-    });
-
-    $("close-admin").addEventListener("click", () => {
-      renderPublic();
-      $("admin-view").hidden = true;
-      $("public-view").hidden = false;
-    });
-
-    $("edit-name").addEventListener("input", (event) => {
-      data.siteName = event.target.value;
-    });
-
-    $("edit-profile").addEventListener("input", (event) => {
-      data.profile = event.target.value;
-    });
-
-    $("add-work").addEventListener("click", () => {
-      data.works.push({ title: "", description: "", file: "" });
-      renderEditors();
-    });
-
-    $("add-post").addEventListener("click", () => {
-      data.posts.unshift({ title: "", date: "", body: "" });
-      renderEditors();
-    });
-
-    $("connect").addEventListener("click", async () => {
-      const next = {
-        owner: $("owner").value.trim(),
-        repo: $("repo").value.trim(),
-        branch: $("branch").value.trim(),
-        token: $("token").value.trim()
-      };
-
-      if (!next.owner || !next.repo || !next.branch || !next.token) {
-        setStatus("接続情報をすべて入力してください。");
-        return;
-      }
-
-      connection = next;
-      setBusy(true);
-      setStatus("GitHubに接続しています…");
-
-      try {
-        const repoUrl = `https://api.github.com/repos/${encodeURIComponent(next.owner)}/${encodeURIComponent(next.repo)}`;
-        await githubRequest(repoUrl);
-
-        const saved = await getFile("site-data.json");
-
-        if (saved) {
-          data = normalize(JSON.parse(base64ToText(saved.content)));
-        } else {
-          data = initialData();
-        }
-
-        $("token").value = "";
-        $("editor").hidden = false;
-        renderEditors();
-        setStatus("接続しました。編集後に「変更を保存して公開」を押してください。");
-      } catch (error) {
-        connection = null;
-        $("editor").hidden = true;
-        setStatus(`接続できませんでした: ${error.message}`);
-      } finally {
-        setBusy(false);
-      }
-    });
-
-    $("save").addEventListener("click", async () => {
-      if (!connection || busy) return;
-
-      setBusy(true);
-      setStatus("変更を保存しています…");
-
-      try {
-        const json = JSON.stringify(data, null, 2);
-        const content = bytesToBase64(new TextEncoder().encode(json));
-        await putFile("site-data.json", content, "サイトの内容を更新");
-        renderPublic();
-        setStatus("保存しました。GitHub Pagesへの反映をお待ちください。");
-      } catch (error) {
-        setStatus(`保存できませんでした: ${error.message}`);
-      } finally {
-        setBusy(false);
-      }
-    });
-
-    async function loadPublicData() {
-      try {
-        const response = await fetch("site-data.json", { cache: "no-store" });
-
-        if (response.ok) {
-          data = normalize(await response.json());
-        }
-      } catch {
-        // 初回公開時など、データがない場合は初期表示を使います。
-      }
-
-      renderPublic();
-    }
-
-    const hostParts = window.location.hostname.split(".");
-    if (hostParts.length >= 3 && hostParts.slice(-2).join(".") === "github.io") {
-      const owner = hostParts[0];
-      const project = window.location.pathname.split("/").filter(Boolean)[0];
-      $("owner").value = owner;
-      $("repo").value = project || `${owner}.github.io`;
-    }
-
-    loadPublicData();
-  </script>
-</body>
-</html>
+    async function getFile
