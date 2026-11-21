@@ -1,3 +1,6 @@
+ありがとうございます。最後まで受け取れました。何度も分けて送っていただくことになり、すみません。
+以下は、既存の機能を残し、自己紹介に名前と丸いアイコンを追加した index.html の全文です。現在のファイルをバックアップしてから、内容をすべて置き換えて保存してください。
+アイコンは管理画面で画像のURLまたはパスを指定します。画像ファイル自体は、別途サイトからアクセスできる場所に置いてください。
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -77,6 +80,15 @@
     .multiline {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+    }
+
+    .profile-icon {
+      display: block;
+      width: 96px;
+      height: 96px;
+      margin-bottom: 16px;
+      border-radius: 50%;
+      object-fit: cover;
     }
 
     a {
@@ -259,6 +271,8 @@
         <section id="about">
           <h2>自己紹介</h2>
           <div class="card">
+            <img id="profile-icon" class="profile-icon" alt="" hidden>
+            <h3 id="profile-name" hidden></h3>
             <p id="profile" class="multiline"></p>
           </div>
         </section>
@@ -350,6 +364,16 @@
           <label>
             サイト名
             <input id="edit-name">
+          </label>
+
+          <label>
+            自己紹介に表示する名前
+            <input id="edit-profile-name">
+          </label>
+
+          <label>
+            アイコン画像のURLまたはパス
+            <input id="edit-profile-icon" placeholder="例：images/icon.png">
           </label>
 
           <label>
@@ -477,6 +501,8 @@
     const initialData = () => ({
       siteName: "マイサイト",
       profile: "ここに自己紹介を書きます。",
+      profileName: "",
+      profileIcon: "",
       works: [],
       posts: [],
       contact: {
@@ -501,6 +527,8 @@
         ...source,
         siteName: String(source.siteName ?? "マイサイト"),
         profile: String(source.profile ?? ""),
+        profileName: String(source.profileName ?? ""),
+        profileIcon: String(source.profileIcon ?? ""),
         works: Array.isArray(source.works)
           ? source.works.filter((item) => item && typeof item === "object")
           : [],
@@ -757,6 +785,21 @@
       $("site-name").textContent = data.siteName;
       $("profile").textContent = data.profile;
 
+      const profileName = $("profile-name");
+      profileName.textContent = data.profileName;
+      profileName.hidden = !data.profileName.trim();
+
+      const profileIcon = $("profile-icon");
+      const iconUrl = safeLink(data.profileIcon.trim());
+
+      if (iconUrl) {
+        profileIcon.src = iconUrl;
+        profileIcon.hidden = false;
+      } else {
+        profileIcon.removeAttribute("src");
+        profileIcon.hidden = true;
+      }
+
       categoryOptions($("work-category"), data.works);
       categoryOptions($("post-category"), data.posts);
       renderWorks();
@@ -778,7 +821,7 @@
       const label = element("label", labelText);
       const input = document.createElement(multiline ? "textarea" : "input");
 
-      input.value = value ?? "";
+          input.value = value ?? "";
       input.addEventListener("input", () => {
         onInput(input.value);
         saveDraft();
@@ -793,8 +836,8 @@
       const button = element("button", label, "secondary");
       button.type = "button";
       button.disabled = direction < 0
-        ? index === 0
-        : index === list.length - 1;
+ ? index === 0
+ : index === list.length - 1;
 
       button.addEventListener("click", () => {
         const target = index + direction;
@@ -810,13 +853,15 @@
 
     function renderEditors() {
       $("edit-name").value = data.siteName;
+      $("edit-profile-name").value = data.profileName;
+      $("edit-profile-icon").value = data.profileIcon;
       $("edit-profile").value = data.profile;
       $("edit-email").value = data.contact.email;
       $("edit-social-name").value = data.contact.socialName;
       $("edit-social-url").value = data.contact.socialUrl;
 
       const workEditor = $("work-editor");
-           workEditor.replaceChildren();
+      workEditor.replaceChildren();
 
       data.works.forEach((work, index) => {
         const box = element("div", undefined, "editor-item");
@@ -988,7 +1033,7 @@
 
     function apiPath(path) {
       const encodedPath = path
-        .split("/")
+ .split("/")
         .map(encodeURIComponent)
         .join("/");
 
@@ -1005,7 +1050,7 @@
           "Authorization": `Bearer ${connection.token}`,
           "Content-Type": "application/json",
           ...fetchOptions.headers
-        }
+ }
       });
 
       if (response.status === 404 && allow404) {
@@ -1035,7 +1080,7 @@
           message,
           content,
           branch: connection.branch
-        })
+ })
       });
     }
 
@@ -1056,7 +1101,7 @@
         message: "サイトの内容を更新",
         content,
         branch: connection.branch
-      };
+ };
 
       if (loadedSha) {
         body.sha = loadedSha;
@@ -1161,6 +1206,12 @@
       ["edit-name", (value) => {
         data.siteName = value;
       }],
+      ["edit-profile-name", (value) => {
+        data.profileName = value;
+      }],
+      ["edit-profile-icon", (value) => {
+        data.profileIcon = value;
+      }],
       ["edit-profile", (value) => {
         data.profile = value;
       }],
@@ -1233,11 +1284,19 @@
       try {
         const value = JSON.parse(await file.text());
 
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
+        if (!value) {
           throw new Error("JSONの形式が正しくありません。");
         }
 
-        if (!Array.isArray(value.works) || !Array.isArray(value.posts)) {
+        if (typeof value !== "object") {
+          throw new Error("JSONの形式が正しくありません。");
+        }
+
+        if (Array.isArray(value)) {
+          throw new Error("JSONの形式が正しくありません。");
+        }
+
+        if (![value.works, value.posts].every(Array.isArray)) {
           throw new Error("作品または記事のデータが見つかりません。");
         }
 
@@ -1273,7 +1332,7 @@
         token: $("token").value.trim()
       };
 
-      if (!next.owner || !next.repo || !next.branch || !next.token) {
+      if (![next.owner, next.repo, next.branch, next.token].every(Boolean)) {
         setStatus("接続情報をすべて入力してください。");
         return;
       }
