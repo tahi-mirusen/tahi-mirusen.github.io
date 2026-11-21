@@ -13,18 +13,12 @@
     rel="stylesheet"
   >
 
-  <style>
+  <style id="site-style">
     :root {
-      --page-bg: #f6f8fb;
-      --text-color: #253041;
-      --card-bg: #ffffff;
-      --accent: #315ed2;
-      --header-bg: #ffffff;
-      --border-color: #e5eaf0;
-      --site-width: 960px;
-      --text-size: 16px;
-      --card-radius: 14px;
-      --content-align: left;
+      font-family: "Noto Sans JP", sans-serif;
+      color: #253041;
+      background: #f6f8fb;
+      line-height: 1.8;
     }
 
     * {
@@ -33,23 +27,15 @@
 
     body {
       margin: 0;
-      color: var(--text-color);
-      background-color: var(--page-bg);
-      background-position: center;
-      background-size: cover;
-      background-attachment: fixed;
-      font-family: "Noto Sans JP", sans-serif;
-      font-size: var(--text-size);
-      line-height: 1.8;
     }
 
     header {
-      background: var(--header-bg);
-      border-bottom: 1px solid var(--border-color);
+      background: #fff;
+      border-bottom: 1px solid #e5eaf0;
     }
 
     .wrap {
-      width: min(var(--site-width), calc(100% - 32px));
+      width: min(960px, calc(100% - 32px));
       margin: auto;
     }
 
@@ -71,10 +57,12 @@
     }
 
     h2 {
+      margin-bottom: 16px;
       font-size: 1.35rem;
     }
 
     h3 {
+      margin-bottom: 8px;
       font-size: 1.1rem;
     }
 
@@ -85,9 +73,9 @@
     .card {
       padding: 24px;
       margin-bottom: 16px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: var(--card-radius);
+      background: #fff;
+      border: 1px solid #e5eaf0;
+      border-radius: 14px;
     }
 
     .grid {
@@ -109,7 +97,7 @@
     }
 
     a {
-      color: var(--accent);
+      color: #315ed2;
       overflow-wrap: anywhere;
     }
 
@@ -158,17 +146,6 @@
       border-radius: 8px;
     }
 
-    input[type="color"] {
-      height: 44px;
-      padding: 4px;
-    }
-
-    input[type="checkbox"] {
-      display: inline-block;
-      width: auto;
-      margin: 0 8px 0 0;
-    }
-
     textarea {
       min-height: 110px;
       resize: vertical;
@@ -198,13 +175,14 @@
       border-radius: 10px;
     }
 
-    .settings-grid {
+    .filter-controls {
       display: grid;
       grid-template-columns: repeat(
         auto-fit,
-        minmax(min(180px, 100%), 1fr)
+        minmax(min(220px, 100%), 1fr)
       );
-      gap: 0 16px;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     [hidden] {
@@ -222,15 +200,15 @@
       position: sticky;
       top: 24px;
       padding: 16px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: var(--card-radius);
+      background: #fff;
+      border: 1px solid #e5eaf0;
+      border-radius: 14px;
     }
 
     .site-nav a {
       display: block;
       padding: 10px 12px;
-      color: var(--text-color);
+      color: #253041;
       text-decoration: none;
       border-radius: 8px;
     }
@@ -238,35 +216,27 @@
     .site-nav a:hover,
     .site-nav a:focus-visible,
     .site-nav a[aria-current="page"] {
-      color: var(--accent);
-      background: rgba(128, 128, 128, 0.12);
+      color: #315ed2;
+      background: #f0f4ff;
     }
 
     .public-content {
       min-width: 0;
-      text-align: var(--content-align);
     }
 
-    .public-image {
+    #preview-frame {
       display: block;
+      width: 100%;
       max-width: 100%;
-      max-height: 500px;
-      margin: 0 auto 16px;
-      border-radius: var(--card-radius);
-      object-fit: contain;
-    }
-
-    #admin-view {
-      color: #253041;
-    }
-
-    #admin-view .card {
+      height: 650px;
+      margin: 16px auto 0;
       background: #fff;
-      border-color: #e5eaf0;
+      border: 1px solid #cdd6e1;
+      border-radius: 8px;
     }
 
-    #admin-view a {
-      color: #315ed2;
+    #preview-frame.mobile {
+      width: 375px;
     }
 
     @media (max-width: 640px) {
@@ -297,8 +267,62 @@
 
   <main class="wrap">
     <div id="public-view">
-      <nav id="site-nav" class="site-nav" aria-label="サイトメニュー"></nav>
-      <div id="public-content" class="public-content"></div>
+      <nav class="site-nav" aria-label="サイトメニュー">
+        <a href="#about">自己紹介</a>
+        <a href="#works-section">作品</a>
+        <a href="#blog-section">ブログ</a>
+        <a href="#contact-section">お問い合わせ</a>
+      </nav>
+
+      <div class="public-content">
+        <section id="about">
+          <h2>自己紹介</h2>
+          <div class="card">
+            <p id="profile" class="multiline"></p>
+          </div>
+        </section>
+
+        <section id="works-section" hidden>
+          <h2>作品</h2>
+          <div class="filter-controls">
+            <label>
+              キーワード検索
+              <input id="work-search" type="search">
+            </label>
+            <label>
+              カテゴリ
+              <select id="work-category"></select>
+            </label>
+          </div>
+          <div id="works" class="grid"></div>
+          <p id="works-empty" class="hint" hidden>
+            該当する作品はありません。
+          </p>
+        </section>
+
+        <section id="blog-section" hidden>
+          <h2>ブログ</h2>
+          <div class="filter-controls">
+            <label>
+              キーワード検索
+              <input id="post-search" type="search">
+            </label>
+            <label>
+              カテゴリ
+              <select id="post-category"></select>
+            </label>
+          </div>
+          <div id="posts"></div>
+          <p id="posts-empty" class="hint" hidden>
+            該当する記事はありません。
+          </p>
+        </section>
+
+        <section id="contact-section" hidden>
+          <h2>お問い合わせ</h2>
+          <div id="contact" class="card"></div>
+        </section>
+      </div>
     </div>
 
     <div id="admin-view" hidden>
@@ -312,8 +336,7 @@
       <div class="card">
         <h3>GitHubに接続</h3>
         <p class="hint">
-          トークンは接続中だけ使用し、サイトのデータには保存しません。
-          このページを閉じるか「サイトに戻る」を押すと接続を解除します。
+          トークンは接続中だけ使用し、サイトのデータや下書きには保存しません。
         </p>
 
         <label>
@@ -352,32 +375,6 @@
             自己紹介
             <textarea id="edit-profile"></textarea>
           </label>
-
-          <div id="profile-image-editor"></div>
-        </div>
-
-        <div class="card">
-          <h3>デザイン</h3>
-          <p class="hint">
-            色・サイズなどを変更できます。変更内容はサイトに戻ると確認できます。
-          </p>
-          <div id="design-editor" class="settings-grid"></div>
-          <div id="background-editor"></div>
-          <button id="reset-design" class="secondary" type="button">
-            デザインを初期設定に戻す
-          </button>
-        </div>
-
-        <div class="card">
-          <h3>メニューと項目</h3>
-          <p class="hint">
-            項目名、表示・非表示、並び順を変更できます。
-            文章や画像を載せる項目も追加できます。
-          </p>
-          <div id="section-editor"></div>
-          <button id="add-section" class="secondary" type="button">
-            項目を追加
-          </button>
         </div>
 
         <div class="card">
@@ -397,13 +394,101 @@
         </div>
 
         <div class="card">
+          <h3>お問い合わせ先</h3>
+          <p class="hint">
+            メールアドレスとSNSのURLは、入力したものだけ表示されます。
+          </p>
+
+          <label>
+            メールアドレス
+            <input id="edit-email" type="email">
+          </label>
+
+          <label>
+            SNSの名前
+            <input id="edit-social-name" placeholder="例：Instagram">
+          </label>
+
+          <label>
+            SNSのURL
+            <input id="edit-social-url" type="url" placeholder="https://">
+          </label>
+        </div>
+
+        <div class="card">
+          <h3>公開前のプレビュー</h3>
+          <p class="hint">
+            この画面だけで見た目を確認できます。プレビュー内のメニューや
+            検索は操作できません。
+          </p>
+
+          <label>
+            表示するページ
+            <select id="preview-section">
+              <option value="about">自己紹介</option>
+              <option value="works-section">作品</option>
+              <option value="blog-section">ブログ</option>
+              <option value="contact-section">お問い合わせ</option>
+            </select>
+          </label>
+
+          <div class="actions">
+            <button id="preview-desktop" class="secondary" type="button">
+              パソコン表示
+            </button>
+            <button id="preview-mobile" class="secondary" type="button">
+              スマホ表示
+            </button>
+            <button id="refresh-preview" class="secondary" type="button">
+              プレビューを更新
+            </button>
+          </div>
+
+          <iframe
+            id="preview-frame"
+            title="公開前のプレビュー"
+            sandbox
+          ></iframe>
+        </div>
+
+        <div class="card">
+          <h3>バックアップと復元</h3>
+          <p class="hint">
+            文章や設定をJSONファイルに保存できます。アップロード済みの
+            作品ファイル自体はバックアップに含まれません。
+          </p>
+
+          <div class="actions">
+            <button id="export-backup" class="secondary" type="button">
+              バックアップを保存
+            </button>
+          </div>
+
+          <label>
+            バックアップファイルを選択
+            <input id="backup-file" type="file" accept=".json,application/json">
+          </label>
+
+          <button id="import-backup" class="secondary" type="button">
+            バックアップを読み込む
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>保存と公開</h3>
+          <p class="hint">
+            編集内容はこのブラウザーに下書きとして自動保存されます。
+            サイトへの公開には、下のボタンを押してください。
+          </p>
+
           <div class="actions">
             <button id="save" type="button">変更を保存して公開</button>
+            <button id="discard-draft" class="danger" type="button">
+              下書きを破棄
+            </button>
           </div>
-          <p class="hint">
-            画像やファイルのアップロード後も、このボタンで内容を保存してください。
-            公開サイトへの反映には少し時間がかかる場合があります。
-          </p>
+
+          <p id="draft-status" class="hint" role="status"></p>
         </div>
       </div>
 
@@ -414,79 +499,45 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const defaultDesign = () => ({
-      pageBg: "#f6f8fb",
-      textColor: "#253041",
-      cardBg: "#ffffff",
-      accent: "#315ed2",
-      headerBg: "#ffffff",
-      borderColor: "#e5eaf0",
-      width: 960,
-      textSize: 16,
-      radius: 14,
-      align: "left",
-      backgroundImage: ""
-    });
-
-    const defaultSections = () => [
-      {
-        id: "about",
-        type: "about",
-        title: "自己紹介",
-        visible: true
-      },
-      {
-        id: "works-section",
-        type: "works",
-        title: "作品",
-        visible: true
-      },
-      {
-        id: "blog-section",
-        type: "blog",
-        title: "ブログ",
-        visible: true
-      }
-    ];
-
     const initialData = () => ({
       siteName: "マイサイト",
       profile: "ここに自己紹介を書きます。",
-      profileImage: "",
       works: [],
       posts: [],
-      design: defaultDesign(),
-      sections: defaultSections()
+      contact: {
+        email: "",
+        socialName: "",
+        socialUrl: ""
+      }
     });
 
     let data = initialData();
     let connection = null;
     let busy = false;
+    let loadedSha = null;
 
     function normalize(value) {
       const source = value && typeof value === "object" ? value : {};
-      const defaults = initialData();
+      const contact = source.contact && typeof source.contact === "object"
+        ? source.contact
+        : {};
 
       return {
         ...source,
-        siteName: String(source.siteName || defaults.siteName),
+        siteName: String(source.siteName || "マイサイト"),
         profile: String(source.profile || ""),
-        profileImage: String(source.profileImage || ""),
         works: Array.isArray(source.works)
           ? source.works.filter((item) => item && typeof item === "object")
           : [],
         posts: Array.isArray(source.posts)
           ? source.posts.filter((item) => item && typeof item === "object")
           : [],
-        design: {
-          ...defaultDesign(),
-          ...(source.design && typeof source.design === "object"
-            ? source.design
-            : {})
-        },
-        sections: Array.isArray(source.sections)
-          ? source.sections.filter((item) => item && typeof item === "object")
-          : defaultSections()
+        contact: {
+          ...contact,
+          email: String(contact.email || ""),
+          socialName: String(contact.socialName || ""),
+          socialUrl: String(contact.socialUrl || "")
+        }
       };
     }
 
@@ -511,84 +562,8 @@
       }
     }
 
-    function validColor(value, fallback) {
-      return /^#[0-9a-f]{6}$/i.test(String(value)) ? value : fallback;
-    }
-
-    function boundedNumber(value, fallback, min, max) {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return fallback;
-      return Math.min(max, Math.max(min, number));
-    }
-
-    function applyDesign() {
-      const design = data.design;
-      const defaults = defaultDesign();
-      const root = document.documentElement;
-
-      root.style.setProperty(
-        "--page-bg",
-        validColor(design.pageBg, defaults.pageBg)
-      );
-      root.style.setProperty(
-        "--text-color",
-        validColor(design.textColor, defaults.textColor)
-      );
-      root.style.setProperty(
-        "--card-bg",
-        validColor(design.cardBg, defaults.cardBg)
-      );
-      root.style.setProperty(
-        "--accent",
-        validColor(design.accent, defaults.accent)
-      );
-      root.style.setProperty(
-        "--header-bg",
-        validColor(design.headerBg, defaults.headerBg)
-      );
-      root.style.setProperty(
-        "--border-color",
-        validColor(design.borderColor, defaults.borderColor)
-      );
-      root.style.setProperty(
-        "--site-width",
-        `${boundedNumber(design.width, 960, 600, 1600)}px`
-      );
-      root.style.setProperty(
-        "--text-size",
-        `${boundedNumber(design.textSize, 16, 12, 28)}px`
-      );
-      root.style.setProperty(
-        "--card-radius",
-        `${boundedNumber(design.radius, 14, 0, 50)}px`
-      );
-      root.style.setProperty(
-        "--content-align",
-        ["left", "center", "right"].includes(design.align)
-          ? design.align
-          : "left"
-      );
-
-      const background = safeLink(design.backgroundImage);
-      document.body.style.backgroundImage = background
-        ? `url(${JSON.stringify(background)})`
-        : "none";
-    }
-
-    function appendImage(parent, source, alt) {
-      const url = safeLink(source);
-      if (!url) return;
-
-      const image = document.createElement("img");
-      image.className = "public-image";
-      image.src = url;
-      image.alt = alt || "";
-      image.loading = "lazy";
-      parent.append(image);
-    }
-
-    function appendLink(parent, source, text) {
-      const url = safeLink(source);
+    function appendLink(parent, value, text) {
+      const url = safeLink(value);
       if (!url) return;
 
       const link = element("a", text);
@@ -598,147 +573,6 @@
       parent.append(link);
     }
 
-    function renderPublic() {
-      applyDesign();
-
-      document.title = data.siteName || "マイサイト";
-      $("site-name").textContent = data.siteName || "マイサイト";
-
-      const nav = $("site-nav");
-      const content = $("public-content");
-      nav.replaceChildren();
-      content.replaceChildren();
-
-      const visibleSections = data.sections.filter(
-        (section) => section.visible !== false && section.id
-      );
-
-      const requestedId = window.location.hash.slice(1);
-      const selected = visibleSections.find(
-        (section) => section.id === requestedId
-      ) || visibleSections[0];
-
-      visibleSections.forEach((section) => {
-        const link = element("a", section.title || "項目");
-        link.href = `#${section.id}`;
-
-        if (selected && section.id === selected.id) {
-          link.setAttribute("aria-current", "page");
-        }
-
-        nav.append(link);
-      });
-
-      if (!selected) {
-        content.append(element("p", "表示する項目がありません。"));
-        return;
-      }
-
-      const sectionNode = document.createElement("section");
-      sectionNode.id = selected.id;
-      sectionNode.append(element("h2", selected.title || "項目"));
-
-      if (selected.type === "about") {
-        const card = element("div", undefined, "card");
-        appendImage(card, data.profileImage, "プロフィール画像");
-        card.append(element("p", data.profile, "multiline"));
-        sectionNode.append(card);
-      }
-
-      if (selected.type === "works") {
-        const grid = element("div", undefined, "grid");
-
-        data.works.forEach((work) => {
-          const card = element("article", undefined, "card");
-          appendImage(card, work.image, work.title || "作品画像");
-          card.append(element("h3", work.title || "無題"));
-          card.append(element("p", work.description || "", "multiline"));
-          appendLink(card, work.file, "ファイルを開く・ダウンロード");
-          grid.append(card);
-        });
-
-        sectionNode.append(grid);
-      }
-
-      if (selected.type === "blog") {
-        data.posts.forEach((post) => {
-          const card = element("article", undefined, "card");
-          card.append(element("h3", post.title || "無題"));
-
-          if (post.date) {
-            card.append(element("p", post.date, "hint"));
-          }
-
-          appendImage(card, post.image, post.title || "記事画像");
-          card.append(element("p", post.body || "", "multiline"));
-          sectionNode.append(card);
-        });
-      }
-
-      if (selected.type === "custom") {
-        const card = element("div", undefined, "card");
-        appendImage(card, selected.image, selected.title || "画像");
-        card.append(element("p", selected.body || "", "multiline"));
-
-        if (selected.link) {
-          appendLink(card, selected.link, selected.linkText || "リンクを開く");
-        }
-
-        sectionNode.append(card);
-      }
-
-      content.append(sectionNode);
-    }
-
-    window.addEventListener("hashchange", renderPublic);
-
-    function field(parent, labelText, value, onInput, options = {}) {
-      const label = element("label", labelText);
-      const input = document.createElement(
-        options.multiline ? "textarea" : "input"
-      );
-
-      if (options.type) input.type = options.type;
-      if (options.min !== undefined) input.min = options.min;
-      if (options.max !== undefined) input.max = options.max;
-
-      input.value = value ?? "";
-      input.addEventListener("input", () => onInput(input.value));
-
-      label.append(input);
-      parent.append(label);
-      return input;
-    }
-
-    function selectField(parent, labelText, value, choices, onChange) {
-      const label = element("label", labelText);
-      const select = document.createElement("select");
-
-      choices.forEach(([choiceValue, choiceText]) => {
-        const option = element("option", choiceText);
-        option.value = choiceValue;
-        select.append(option);
-      });
-
-      select.value = value;
-      select.addEventListener("change", () => onChange(select.value));
-
-      label.append(select);
-      parent.append(label);
-    }
-
-    function checkboxField(parent, labelText, checked, onChange) {
-      const label = document.createElement("label");
-      const input = document.createElement("input");
-
-      input.type = "checkbox";
-      input.checked = checked;
-      input.addEventListener("change", () => onChange(input.checked));
-
-      label.append(input, document.createTextNode(labelText));
-      parent.append(label);
-    }
-
     function setStatus(message) {
       $("status").textContent = message;
     }
@@ -746,68 +580,245 @@
     function setBusy(value) {
       busy = value;
 
-      document.querySelectorAll("#admin-view button").forEach((button) => {
-        button.disabled = value;
+      document.querySelectorAll(
+        "#admin-view button, #admin-view input, #admin-view textarea, #admin-view select"
+      ).forEach((control) => {
+        control.disabled = value;
+      });
+    }
+
+    function draftKey() {
+      if (!connection) return null;
+
+      return "site-draft:" + JSON.stringify([
+        connection.owner.toLowerCase(),
+        connection.repo.toLowerCase(),
+        connection.branch
+      ]);
+    }
+
+    function saveDraft() {
+      const key = draftKey();
+      if (!key) return;
+
+      try {
+        localStorage.setItem(key, JSON.stringify({
+          data,
+          baseSha: loadedSha,
+          savedAt: new Date().toISOString()
+        }));
+        $("draft-status").textContent = "下書きをこのブラウザーに保存しました。";
+      } catch {
+        $("draft-status").textContent =
+          "下書きを保存できませんでした。ブラウザーの保存設定や空き容量を確認してください。";
+      }
+    }
+
+    function removeDraft() {
+      const key = draftKey();
+      if (!key) return;
+
+      try {
+        localStorage.removeItem(key);
+        $("draft-status").textContent = "";
+      } catch {
+        $("draft-status").textContent =
+          "下書きを削除できませんでした。ブラウザーの保存設定を確認してください。";
+      }
+    }
+
+    function readDraft() {
+      const key = draftKey();
+      if (!key) return null;
+
+      try {
+        const text = localStorage.getItem(key);
+        return text ? JSON.parse(text) : null;
+      } catch {
+        $("draft-status").textContent =
+          "下書きを読み込めませんでした。ブラウザーの保存設定を確認してください。";
+        return null;
+      }
+    }
+
+    function categoryOptions(select, items) {
+      const previous = select.value;
+      const categories = [...new Set(
+        items.map((item) => String(item.category || "").trim()).filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b, "ja"));
+
+      select.replaceChildren();
+
+      const all = element("option", "すべて");
+      all.value = "";
+      select.append(all);
+
+      categories.forEach((category) => {
+        const option = element("option", category);
+        option.value = category;
+        select.append(option);
       });
 
-      document.querySelectorAll("#admin-view input, #admin-view textarea, #admin-view select")
-        .forEach((input) => {
-          input.disabled = value;
-        });
+      select.value = categories.includes(previous) ? previous : "";
     }
 
-    function bytesToBase64(bytes) {
-      let binary = "";
-      const chunkSize = 8192;
+    function matches(item, keyword, category, fields) {
+      const itemCategory = String(item.category || "").trim();
+      if (category && itemCategory !== category) return false;
 
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(
-          ...bytes.subarray(i, i + chunkSize)
-        );
+      const searchText = fields
+        .map((key) => String(item[key] || ""))
+        .join(" ")
+        .toLocaleLowerCase();
+
+      return searchText.includes(keyword.trim().toLocaleLowerCase());
+    }
+
+    function renderWorks() {
+      const container = $("works");
+      container.replaceChildren();
+
+      const items = data.works.filter((work) => matches(
+        work,
+        $("work-search").value,
+        $("work-category").value,
+        ["title", "description", "category"]
+      ));
+
+      items.forEach((work) => {
+        const card = element("article", undefined, "card");
+        card.append(element("h3", work.title || "無題"));
+
+        if (work.category) {
+          card.append(element("p", work.category, "hint"));
+        }
+
+        card.append(element("p", work.description || "", "multiline"));
+        appendLink(card, work.file, "ファイルを開く・ダウンロード");
+        container.append(card);
+      });
+
+      $("works-empty").hidden = items.length > 0;
+    }
+
+    function renderPosts() {
+      const container = $("posts");
+      container.replaceChildren();
+
+      const items = data.posts.filter((post) => matches(
+        post,
+        $("post-search").value,
+        $("post-category").value,
+        ["title", "body", "category"]
+      ));
+
+      items.forEach((post) => {
+        const card = element("article", undefined, "card");
+        card.append(element("h3", post.title || "無題"));
+
+        if (post.date) card.append(element("p", post.date, "hint"));
+        if (post.category) card.append(element("p", post.category, "hint"));
+
+        card.append(element("p", post.body || "", "multiline"));
+        container.append(card);
+      });
+
+      $("posts-empty").hidden = items.length > 0;
+    }
+
+    function renderContact() {
+      const container = $("contact");
+      container.replaceChildren();
+
+      const email = data.contact.email.trim();
+      const socialUrl = safeLink(data.contact.socialUrl);
+
+      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        const paragraph = element("p");
+        const link = element("a", email);
+        link.href = "mailto:" + encodeURIComponent(email).replace("%40", "@");
+        paragraph.append("メール：", link);
+        container.append(paragraph);
       }
 
-      return btoa(binary);
+      if (socialUrl) {
+        const paragraph = element("p");
+        appendLink(
+          paragraph,
+          socialUrl,
+          data.contact.socialName.trim() || "SNSを開く"
+        );
+        container.append(paragraph);
+      }
+
+      if (!container.hasChildNodes()) {
+        container.append(element("p", "お問い合わせ先はまだ登録されていません。"));
+      }
     }
 
-    function base64ToText(base64) {
-      const binary = atob(base64.replace(/\s/g, ""));
-      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-      return new TextDecoder().decode(bytes);
-    }
+    const sectionIds = [
+      "about",
+      "works-section",
+      "blog-section",
+      "contact-section"
+    ];
 
-    function apiPath(path) {
-      const encodedPath = path
-        .split("/")
-        .map(encodeURIComponent)
-        .join("/");
+    function showPublicSection(id) {
+      const selected = sectionIds.includes(id) ? id : "about";
 
-      return `https://api.github.com/repos/${encodeURIComponent(connection.owner)}/${encodeURIComponent(connection.repo)}/contents/${encodedPath}`;
-    }
+      sectionIds.forEach((sectionId) => {
+        $(sectionId).hidden = sectionId !== selected;
+      });
 
-    async function githubRequest(url, options = {}) {
-      const { allow404, ...fetchOptions } = options;
-
-      const response = await fetch(url, {
-        ...fetchOptions,
-        headers: {
-          "Accept": "application/vnd.github+json",
-          "Authorization": `Bearer ${connection.token}`,
-          "Content-Type": "application/json",
-          ...fetchOptions.headers
+      document.querySelectorAll(".site-nav a").forEach((link) => {
+        if (link.getAttribute("href") === "#" + selected) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
         }
       });
-
-      if (response.status === 404 && allow404) return null;
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || `GitHubエラー: ${response.status}`
-        );
-      }
-
-      return result;
     }
 
-    async function getFile
+    function renderPublic() {
+      document.title = data.siteName;
+      $("site-name").textContent = data.siteName;
+      $("profile").textContent = data.profile;
+
+      categoryOptions($("work-category"), data.works);
+      categoryOptions($("post-category"), data.posts);
+      renderWorks();
+      renderPosts();
+      renderContact();
+      showPublicSection(window.location.hash.slice(1));
+    }
+
+    window.addEventListener("hashchange", () => {
+      showPublicSection(window.location.hash.slice(1));
+    });
+
+    $("work-search").addEventListener("input", renderWorks);
+    $("work-category").addEventListener("change", renderWorks);
+    $("post-search").addEventListener("input", renderPosts);
+    $("post-category").addEventListener("change", renderPosts);
+
+    function field(parent, labelText, value, onInput, multiline = false) {
+      const label = element("label", labelText);
+      const input = document.createElement(multiline ? "textarea" : "input");
+
+      input.value = value || "";
+      input.addEventListener("input", () => onInput(input.value));
+
+      label.append(input);
+      parent.append(label);
+      return input;
+    }
+
+    function moveButton(list, index, direction, label) {
+      const button = element("button", label, "secondary");
+      button.type = "button";
+      button.disabled = direction < 0
+        ? index === 0
+        : index === list.length - 1;
+
+      button.addEventListener("click", () => {
+       
