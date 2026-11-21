@@ -1207,4 +1207,360 @@
     });
 
     $("close-admin").addEventListener("click", () => {
-      connection = null
+      connection = null;
+      loadedSha = null;
+      $("token").value = "";
+      $("editor").hidden = true;
+      $("preview-frame").srcdoc = "";
+
+      data = cloneData(publishedData);
+      renderPublic();
+
+      $("admin-view").hidden = true;
+      $("public-view").hidden = false;
+      setStatus("");
+    });
+
+    [
+      ["edit-name", (value) => {
+        data.siteName = value;
+      }],
+      ["edit-profile-name", (value) => {
+        data.profileName = value;
+      }],
+      ["edit-profile-icon", (value) => {
+        data.profileIcon = value;
+      }],
+      ["edit-profile", (value) => {
+        data.profile = value;
+      }],
+      ["edit-email", (value) => {
+        data.contact.email = value;
+      }],
+      ["edit-social-name", (value) => {
+        data.contact.socialName = value;
+      }],
+      ["edit-social-url", (value) => {
+        data.contact.socialUrl = value;
+      }]
+    ].forEach(([id, update]) => {
+      $(id).addEventListener("input", (event) => {
+        update(event.target.value);
+        saveDraft();
+      });
+    });
+
+    $("upload-profile-icon").addEventListener("click", async () => {
+      if (busy) return;
+
+      const input = $("profile-icon-file");
+      const file = input.files[0];
+
+      if (!file) {
+        setStatus("アイコン画像を選択してください。");
+        return;
+      }
+
+      if (!connection) {
+        setStatus("先にGitHubへ接続してください。");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setStatus("アイコン画像は5MBまでです。");
+        return;
+      }
+
+      const extensions = {
+        "image/png": ".png",
+        "image/jpeg": ".jpg",
+        "image/gif": ".gif",
+        "image/webp": ".webp"
+      };
+
+      const extension = extensions[file.type];
+
+      if (!extension) {
+        setStatus("PNG・JPEG・GIF・WebP形式の画像を選択してください。");
+        return;
+      }
+
+      setBusy(true);
+      setStatus("アイコン画像をアップロードしています…");
+
+      try {
+        const path = `uploads/${crypto.randomUUID()}${extension}`;
+        const bytes = new Uint8Array(await file.arrayBuffer());
+
+        await createFile(
+          path,
+          bytesToBase64(bytes),
+          "プロフィール画像を追加"
+        );
+
+        data.profileIcon = path;
+        $("edit-profile-icon").value = path;
+        input.value = "";
+        saveDraft();
+
+        setStatus(
+          "画像をアップロードしました。アイコンの公開には「変更を保存して公開」を押してください。"
+        );
+      } catch (error) {
+        setStatus(`アップロードできませんでした: ${error.message}`);
+      } finally {
+        setBusy(false);
+        renderEditors();
+      }
+    });
+
+    $("add-work").addEventListener("click", () => {
+      data.works.push({
+        title: "",
+        description: "",
+        category: "",
+        file: ""
+      });
+
+      saveDraft();
+      renderEditors();
+    });
+
+    $("add-post").addEventListener("click", () => {
+      data.posts.unshift({
+        title: "",
+        date: "",
+        category: "",
+        body: ""
+      });
+
+      saveDraft();
+      renderEditors();
+    });
+
+    $("export-backup").addEventListener("click", () => {
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "site-backup.json";
+      link.click();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus("バックアップを保存しました。");
+    });
+
+    $("import-backup").addEventListener("click", async () => {
+      const file = $("backup-file").files[0];
+
+      if (!file) {
+        setStatus("バックアップファイルを選択してください。");
+        return;
+      }
+
+      if (!confirm("編集中の内容をバックアップの内容に置き換えますか？")) {
+        return;
+      }
+
+      try {
+        const value = JSON.parse(await file.text());
+
+        if (!value) {
+          throw new Error("JSONの形式が正しくありません。");
+        }
+
+        if (typeof value !== "object") {
+          throw new Error("JSONの形式が正しくありません。");
+        }
+
+        if (Array.isArray(value)) {
+          throw new Error("JSONの形式が正しくありません。");
+        }
+
+        if (![value.works, value.posts].every(Array.isArray)) {
+          throw new Error("作品または記事のデータが見つかりません。");
+        }
+
+        data = normalize(value);
+        saveDraft();
+        renderEditors();
+        updatePreview();
+
+        setStatus(
+          "バックアップを読み込みました。公開するには保存ボタンを押してください。"
+        );
+      } catch (error) {
+        setStatus(`読み込めませんでした: ${error.message}`);
+      }
+    });
+
+    $("discard-draft").addEventListener("click", () => {
+      if (!connection) return;
+      if (!confirm("このブラウザーの下書きを破棄しますか？")) return;
+
+      removeDraft();
+      data = cloneData(publishedData);
+      renderEditors();
+      updatePreview();
+      setStatus("下書きを破棄し、接続時の公開データに戻しました。");
+    });
+
+    $("connect").addEventListener("click", async () => {
+      const next = {
+        owner: $("owner").value.trim(),
+        repo: $("repo").value.trim(),
+        branch: $("branch").value.trim(),
+        token: $("token").value.trim()
+      };
+
+      if (![next.owner, next.repo, next.branch, next.token].every(Boolean)) {
+        setStatus("接続情報をすべて入力してください。");
+        return;
+      }
+
+      connection = next;
+      $("editor").hidden = true;
+      setBusy(true);
+      setStatus("GitHubに接続しています…");
+
+      try {
+        const repoUrl =
+          `https://api.github.com/repos/${encodeURIComponent(next.owner)}/${encodeURIComponent(next.repo)}`;
+
+        const branchUrl =
+          `${repoUrl}/branches/${encodeURIComponent(next.branch)}`;
+
+        await githubRequest(repoUrl);
+        await githubRequest(branchUrl);
+
+        const saved = await getFile("site-data.json");
+
+        if (saved) {
+          if (typeof saved.content !== "string") {
+            throw new Error("サイトデータの内容を読み取れませんでした。");
+          }
+
+          data = normalize(JSON.parse(base64ToText(saved.content)));
+          loadedSha = saved.sha;
+        } else {
+          const create = confirm(
+            "指定したブランチに site-data.json が見つかりません。" +
+            "初期データで編集を始めますか？"
+          );
+
+          if (!create) {
+            throw new Error("接続を中止しました。");
+          }
+
+          data = initialData();
+          loadedSha = null;
+        }
+
+        publishedData = cloneData(data);
+
+        const draft = readDraft();
+
+        if (draft && draft.data) {
+          if (draft.baseSha === loadedSha) {
+            if (confirm("このブラウザーに保存された下書きを復元しますか？")) {
+              data = normalize(draft.data);
+              $("draft-status").textContent = "下書きを復元しました。";
+            }
+          } else {
+            const restore = confirm(
+              "下書き作成後にGitHub上のデータが変更されています。" +
+              "下書きを復元してバックアップしますか？" +
+              "このままでは公開できません。"
+            );
+
+            if (restore) {
+              data = normalize(draft.data);
+              loadedSha = draft.baseSha ?? null;
+              $("draft-status").textContent =
+                "古い下書きを復元しました。公開前に競合を解消してください。";
+            }
+          }
+        }
+
+        $("token").value = "";
+        $("editor").hidden = false;
+        renderEditors();
+
+        setStatus(
+          "接続しました。編集後に「変更を保存して公開」を押してください。"
+        );
+      } catch (error) {
+        connection = null;
+        loadedSha = null;
+        $("editor").hidden = true;
+        setStatus(`接続できませんでした: ${error.message}`);
+      } finally {
+        setBusy(false);
+
+        if (connection) {
+          renderEditors();
+        }
+      }
+    });
+
+    $("save").addEventListener("click", async () => {
+      if (!connection) return;
+      if (busy) return;
+
+      setBusy(true);
+      setStatus("変更を保存しています…");
+
+      try {
+        await saveDataFile();
+
+        publishedData = cloneData(data);
+        removeDraft();
+        renderPublic();
+
+        setStatus(
+          "保存しました。GitHub Pagesへの反映をお待ちください。"
+        );
+      } catch (error) {
+        setStatus(`保存できませんでした: ${error.message}`);
+      } finally {
+        setBusy(false);
+        renderEditors();
+      }
+    });
+
+    async function loadPublicData() {
+      try {
+        const response = await fetch("site-data.json", {
+          cache: "no-store"
+        });
+
+        if (response.ok) {
+          data = normalize(await response.json());
+        }
+      } catch {
+        // 読み込みに失敗した場合は初期表示を使います。
+      }
+
+      publishedData = cloneData(data);
+      renderPublic();
+    }
+
+    const hostParts = window.location.hostname.split(".");
+
+    if (
+      hostParts.length >= 3 &&
+      hostParts.slice(-2).join(".") === "github.io"
+    ) {
+      const owner = hostParts[0];
+      const project = window.location.pathname.split("/").filter(Boolean)[0];
+
+      $("owner").value = owner;
+      $("repo").value = project ? project : `${owner}.github.io`;
+    }
+
+    loadPublicData();
+  </script>
+</body>
+</html>
