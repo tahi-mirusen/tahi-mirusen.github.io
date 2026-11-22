@@ -214,6 +214,53 @@
       min-width: 0;
     }
 
+    #posts {
+      border-top: 1px solid #e5eaf0;
+    }
+
+    .post-row {
+      display: grid;
+      gap: 16px;
+      align-items: center;
+      padding: 22px 0;
+      border-bottom: 1px solid #e5eaf0;
+    }
+
+    .post-row.has-cover {
+      grid-template-columns: minmax(0, 1fr) minmax(88px, 28%);
+    }
+
+    .post-row h3, .post-meta, .post-excerpt {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .post-row h3 {
+      font-size: 1.2rem;
+      line-height: 1.45;
+    }
+
+    .post-row h3 a, .post-back {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+    }
+
+    .post-meta { color: #627086; font-size: 0.9rem; }
+    .post-excerpt { line-height: 1.65; }
+    .post-cover { display: block; width: 100%; aspect-ratio: 2 / 1; object-fit: cover; border-radius: 8px; background: #e5eaf0; }
+    .post-row .post-cover { aspect-ratio: 4 / 3; }
+    .post-article { padding: clamp(16px, 4vw, 36px); }
+    .post-article .post-cover { margin: 16px 0 24px; }
+    .post-article h2 { margin: 8px 0; font-size: clamp(1.6rem, 4vw, 2.8rem); line-height: 1.35; overflow-wrap: anywhere; }
+    .post-body { margin-top: 24px; max-width: 70ch; line-height: 1.85; overflow-wrap: anywhere; }
+    .post-body p { white-space: pre-wrap; }
+    .post-body img { max-width: 100%; height: auto; vertical-align: middle; }
+    .post-preview { margin-top: 16px; }
+    .post-preview summary { cursor: pointer; padding-block: 10px; }
+    .post-actions { margin-top: 16px; }
+    .post-actions button { min-height: 44px; }
+
     #preview-frame {
       display: block;
       width: 100%;
@@ -293,21 +340,24 @@
         </section>
 
         <section id="blog-section" hidden>
-          <h2>ブログ</h2>
-          <div class="filter-controls">
-            <label>
-              キーワード検索
-              <input id="post-search" type="search">
-            </label>
-            <label>
-              カテゴリ
-              <select id="post-category"></select>
-            </label>
+          <div id="blog-list">
+            <h2>ブログ</h2>
+            <div class="filter-controls">
+              <label>
+                キーワード検索
+                <input id="post-search" type="search">
+              </label>
+              <label>
+                カテゴリ
+                <select id="post-category"></select>
+              </label>
+            </div>
+            <div id="posts"></div>
+            <p id="posts-empty" class="hint" hidden>
+              該当する記事はありません。
+            </p>
           </div>
-          <div id="posts"></div>
-          <p id="posts-empty" class="hint" hidden>
-            該当する記事はありません。
-          </p>
+          <div id="blog-article" hidden></div>
         </section>
 
         <section id="contact-section" hidden>
@@ -406,6 +456,7 @@
 
         <div class="card">
           <h3>ブログ</h3>
+          <p class="hint">ここで記事を書き、プレビューで確認できます。公開は画面下の「変更を保存して公開」から行います。</p>
           <div id="post-editor"></div>
           <button id="add-post" class="secondary" type="button">
             記事を追加
@@ -547,7 +598,7 @@
           ? source.works.filter((item) => item && typeof item === "object")
           : [],
         posts: Array.isArray(source.posts)
-          ? source.posts.filter((item) => item && typeof item === "object")
+          ? normalizePosts(source.posts)
           : [],
         contact: {
           ...contact,
@@ -556,6 +607,26 @@
           socialUrl: String(contact.socialUrl ?? "")
         }
       };
+    }
+
+    function normalizePosts(posts) {
+      const used = new Set();
+      return posts.filter((post) => post && typeof post === "object" && !Array.isArray(post)).map((post) => {
+        let id = post.id;
+        if (typeof id !== "string" || !/^[a-z0-9-]{1,80}$/.test(id) || used.has(id)) {
+          // Existing entries get reproducible links before their first save.
+          let hash = 2166136261;
+          const content = JSON.stringify([post.title, post.date, post.category, post.body]);
+          for (let i = 0; i < content.length; i++) {
+            hash = Math.imul(hash ^ content.charCodeAt(i), 16777619);
+          }
+          const base = `entry-${(hash >>> 0).toString(36)}`;
+          id = base;
+          for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+        }
+        used.add(id);
+        return { ...post, id };
+      });
     }
 
     function element(tag, text, className) {
@@ -714,6 +785,106 @@
       $("works-empty").hidden = items.length > 0;
     }
 
+    function postRoute(id) {
+      return `blog-section/${id}`;
+    }
+
+    function postMeta(post) {
+      return [post.date, post.category].filter(Boolean).join(" / ");
+    }
+
+    function postImage(value, alt) {
+      const url = safeLink(String(value ?? "").trim());
+      if (!url) return null;
+      const image = element("img");
+      image.src = url;
+      image.alt = String(alt ?? "");
+      image.loading = "lazy";
+      image.referrerPolicy = "no-referrer";
+      return image;
+    }
+
+    function postCover(post, decorative = false) {
+      const image = postImage(post.cover, decorative ? "" : post.coverAlt);
+      if (image) image.className = "post-cover";
+      return image;
+    }
+
+    // Only the supported writing tools become DOM nodes. Everything else is text.
+    function appendPostInline(parent, line) {
+      const pattern = /(!?)\[([^\]\n]*)\]\(([^()\s]+)\)|\*\*([^*\n]+)\*\*/g;
+      let cursor = 0;
+      for (const match of line.matchAll(pattern)) {
+        parent.append(line.slice(cursor, match.index));
+        if (match[4]) {
+          parent.append(element("strong", match[4]));
+        } else if (match[1]) {
+          parent.append(postImage(match[3], match[2]) ?? match[0]);
+        } else if (safeLink(match[3])) {
+          appendLink(parent, match[3], match[2] || match[3]);
+        } else {
+          parent.append(match[0]);
+        }
+        cursor = match.index + match[0].length;
+      }
+      parent.append(line.slice(cursor));
+    }
+
+    function postBody(post) {
+      const body = element("div", undefined, "post-body");
+      const text = String(post.body ?? "").replace(/\r\n?/g, "\n");
+      if (post.format !== "markdown") {
+        body.append(element("p", text));
+        return body;
+      }
+
+      let paragraph;
+      for (const line of text.split("\n")) {
+        const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+        if (heading) {
+          const node = element(heading[1].length === 1 ? "h3" : `h${heading[1].length + 2}`);
+          appendPostInline(node, heading[2]);
+          body.append(node);
+          paragraph = null;
+        } else if (!line.trim()) {
+          paragraph = null;
+        } else {
+          if (!paragraph) {
+            paragraph = element("p");
+            body.append(paragraph);
+          } else {
+            paragraph.append("\n");
+          }
+          appendPostInline(paragraph, line);
+        }
+      }
+      return body;
+    }
+
+    function postExcerpt(post) {
+      let text = String(post.body ?? "");
+      if (post.format === "markdown") {
+        text = text.replace(/^#{1,3}\s+/gm, "")
+          .replace(/!\[[^\]\n]*\]\([^()\s]+\)/g, "")
+          .replace(/\[([^\]\n]*)\]\([^()\s]+\)/g, "$1")
+          .replace(/\*\*([^*\n]+)\*\*/g, "$1");
+      }
+      const characters = Array.from(text.replace(/\s+/g, " ").trim());
+      return characters.slice(0, 100).join("") + (characters.length > 100 ? "…" : "");
+    }
+
+    function makePostArticle(post) {
+      const article = element("article", undefined, "card post-article");
+      const title = element("h2", post.title || "無題");
+      title.tabIndex = -1;
+      article.append(title);
+      if (postMeta(post)) article.append(element("p", postMeta(post), "post-meta"));
+      const cover = postCover(post);
+      if (cover) article.append(cover);
+      article.append(postBody(post));
+      return article;
+    }
+
     function renderPosts() {
       const container = $("posts");
       container.replaceChildren();
@@ -726,17 +897,67 @@
       ));
 
       items.forEach((post) => {
-        const card = element("article", undefined, "card");
-        card.append(element("h3", post.title ? post.title : "無題"));
-
-        if (post.date) card.append(element("p", post.date, "hint"));
-        if (post.category) card.append(element("p", post.category, "hint"));
-
-        card.append(element("p", post.body ?? "", "multiline"));
-        container.append(card);
+        const row = element("article", undefined, "post-row");
+        const copy = element("div");
+        const heading = element("h3");
+        const link = element("a", post.title || "無題");
+        link.href = `#${postRoute(post.id)}`;
+        heading.append(link);
+        if (postMeta(post)) copy.append(element("p", postMeta(post), "post-meta"));
+        copy.append(heading);
+        const excerpt = postExcerpt(post);
+        if (excerpt) copy.append(element("p", excerpt, "post-excerpt"));
+        row.append(copy);
+        const cover = postCover(post, true);
+        if (cover) {
+          row.classList.add("has-cover");
+          row.append(cover);
+        }
+        container.append(row);
       });
 
       $("posts-empty").hidden = items.length > 0;
+    }
+
+    function showPostRoute(id, focus) {
+      const container = $("blog-article");
+      $("blog-list").hidden = Boolean(id);
+      container.hidden = !id;
+      container.replaceChildren();
+      if (!id) return;
+
+      const back = element("a", "ブログ一覧に戻る", "post-back");
+      back.href = "#blog-section";
+      container.append(back);
+      const post = data.posts.find((entry) => entry.id === id);
+      if (!post) {
+        container.append(element("p", "この記事は見つかりませんでした。", "card"));
+        if (focus) back.focus();
+        return;
+      }
+
+      document.title = `${post.title || "無題"} | ${data.siteName}`;
+      const article = makePostArticle(post);
+      const actions = element("div", undefined, "actions post-actions");
+      const copy = element("button", "記事のリンクをコピー", "secondary");
+      copy.type = "button";
+      const feedback = element("span", "", "hint");
+      feedback.setAttribute("role", "status");
+      copy.addEventListener("click", async () => {
+        try {
+          const url = new URL(location.href);
+          url.search = "";
+          url.hash = postRoute(post.id);
+          await navigator.clipboard.writeText(url.href);
+          feedback.textContent = "リンクをコピーしました。";
+        } catch {
+          feedback.textContent = "アドレスバーからリンクをコピーしてください。";
+        }
+      });
+      actions.append(copy, feedback);
+      article.append(actions);
+      container.append(article);
+      if (focus) article.querySelector("h2").focus();
     }
 
     function renderContact() {
@@ -778,8 +999,9 @@
       "contact-section"
     ];
 
-    function showPublicSection(id) {
-      const selected = sectionIds.includes(id) ? id : "about";
+    function showPublicSection(id, focus = false) {
+      const postId = id.startsWith("blog-section/") ? id.slice("blog-section/".length) : "";
+      const selected = postId ? "blog-section" : sectionIds.includes(id) ? id : "about";
 
       sectionIds.forEach((sectionId) => {
         $(sectionId).hidden = sectionId !== selected;
@@ -792,6 +1014,14 @@
           link.removeAttribute("aria-current");
         }
       });
+
+      document.title = data.siteName;
+      showPostRoute(postId, focus);
+      if (focus && selected === "blog-section" && !postId) {
+        const heading = $("blog-list").querySelector("h2");
+        heading.tabIndex = -1;
+        heading.focus();
+      }
     }
 
     function renderPublic() {
@@ -823,7 +1053,7 @@
     }
 
     window.addEventListener("hashchange", () => {
-      showPublicSection(window.location.hash.slice(1));
+      showPublicSection(window.location.hash.slice(1), true);
     });
 
     $("work-search").addEventListener("input", renderWorks);
@@ -865,6 +1095,35 @@
       });
 
       return button;
+    }
+
+    function addPostWritingTools(box, post, input, refresh) {
+      const toolbar = element("div", undefined, "actions");
+      const tools = [
+        ["見出し", (text) => `# ${text || "見出し"}`, true],
+        ["太字", (text) => `**${text || "強調したい言葉"}**`],
+        ["リンク", (text) => `[${text || "リンクの名前"}](https://example.com/)`],
+        ["本文に画像", (text) => `![${text || "画像の説明"}](https://example.com/image.jpg)`, true]
+      ];
+      tools.forEach(([label, format, block]) => {
+        const button = element("button", label, "secondary");
+        button.type = "button";
+        button.addEventListener("click", () => {
+          const start = input.selectionStart;
+          const end = input.selectionEnd;
+          const selected = input.value.slice(start, end);
+          const before = block && start > 0 && input.value[start - 1] !== "\n" ? "\n" : "";
+          const after = block && end < input.value.length && input.value[end] !== "\n" ? "\n" : "";
+          input.setRangeText(before + format(selected) + after, start, end, "select");
+          post.format = "markdown";
+          input.dispatchEvent(new Event("input"));
+          input.focus();
+          refresh();
+        });
+        toolbar.append(button);
+      });
+      box.insertBefore(toolbar, input.closest("label"));
+      box.insertBefore(element("p", "装飾ボタンで書式を挿入できます。リンクや画像のサンプルURLは、使いたいURLに置き換えてください。", "hint"), input.closest("label"));
     }
 
     function renderEditors() {
@@ -991,6 +1250,15 @@
         const box = element("div", undefined, "editor-item");
         box.append(element("h3", `記事 ${index + 1}`));
 
+        const preview = element("details", undefined, "post-preview");
+        const previewBody = element("div");
+        preview.append(element("summary", "この記事をプレビュー"), previewBody);
+        const refresh = () => {
+          if (preview.open) previewBody.replaceChildren(makePostArticle(post));
+        };
+        preview.addEventListener("toggle", refresh);
+        box.addEventListener("input", refresh);
+
         field(box, "タイトル", post.title, (value) => {
           post.title = value;
         });
@@ -1003,9 +1271,38 @@
           post.category = value;
         });
 
-        field(box, "本文", post.body, (value) => {
+        field(box, "表紙画像のURLまたはパス（任意）", post.cover, (value) => {
+          post.cover = value;
+        });
+
+        field(box, "表紙画像の説明（任意）", post.coverAlt, (value) => {
+          post.coverAlt = value;
+        });
+
+        const body = field(box, "本文", post.body, (value) => {
           post.body = value;
         }, true);
+        const formatLabel = element("label");
+        formatLabel.textContent = "本文の書式";
+        const format = element("select");
+        const textOption = element("option", "プレーンテキスト");
+        textOption.value = "plain";
+        const markdownOption = element("option", "装飾あり（Markdownの一部）");
+        markdownOption.value = "markdown";
+        format.append(textOption, markdownOption);
+        format.value = post.format === "markdown" ? "markdown" : "plain";
+        format.addEventListener("change", () => {
+          post.format = format.value;
+          saveDraft();
+          refresh();
+        });
+        formatLabel.append(format);
+        box.insertBefore(formatLabel, body.closest("label"));
+        addPostWritingTools(box, post, body, () => {
+          format.value = post.format;
+          refresh();
+        });
+        box.append(preview);
 
         const actions = element("div", undefined, "actions");
         const up = moveButton(data.posts, index, -1, "上へ");
@@ -1328,10 +1625,14 @@
 
     $("add-post").addEventListener("click", () => {
       data.posts.unshift({
+        id: `entry-${crypto.randomUUID()}`,
         title: "",
         date: "",
         category: "",
-        body: ""
+        body: "",
+        format: "markdown",
+        cover: "",
+        coverAlt: ""
       });
 
       saveDraft();
