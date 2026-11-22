@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Tahi Admin</title>
+<link rel="stylesheet" href="./assets/admin.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="./"><span class="brandmark">T</span><span>TAHI <small>ADMIN</small></span></a>
+    <div class="navlabel">WORKSPACE</div>
+    <button class="nav active" data-view="dashboard">▦ <span>ダッシュボード</span></button>
+    <button class="nav" data-view="content">▤ <span>コンテンツ管理</span></button>
+    <button class="nav" data-view="analytics">▥ <span>アクセス解析</span></button>
+    <button class="nav" data-view="settings">⚙ <span>設定・バックアップ</span></button>
+    <div class="sidebottom"><span class="dot"></span> GitHub連携管理</div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="eyebrow">PERSONAL PORTAL / ADMIN</div><h1 id="page-title">ダッシュボード</h1></div>
+      <div class="topactions"><span id="whoami" class="who">未ログイン</span><button id="logout" class="btn ghost" hidden>ログアウト</button></div>
+    </header>
+    <section id="login-panel" class="login-wrap">
+      <div class="login-card">
+        <div class="login-icon">⌘</div><p class="eyebrow">SECURE ADMIN ACCESS</p>
+        <h2>管理者ログイン</h2>
+        <p class="muted">許可されたGitHubアカウントでログインしてください。</p>
+        <button id="login" class="btn primary wide">◉　GitHubでログイン</button>
+        <p id="login-message" class="message"></p>
+        <p class="tiny">この管理画面は管理者認証が完了するまで管理データを読み込みません。</p>
+      </div>
+    </section>
+    <section id="app" hidden>
+      <div id="dashboard" class="view">
+        <div class="welcome"><div><p class="eyebrow">OVERVIEW</p><h2>おかえりなさい</h2><p class="muted">サイトの状態をまとめて確認できます。</p></div><div class="welcome-icon">✦</div></div>
+        <div class="stats">
+          <article class="stat"><span>公開作品</span><strong id="work-count">—</strong><small>site-data.json</small></article>
+          <article class="stat"><span>ブログ記事</span><strong id="post-count">—</strong><small>site-data.json</small></article>
+          <article class="stat"><span>今日のPV</span><strong id="today-pv">—</strong><small>集計イベント</small></article>
+          <article class="stat"><span>累計PV</span><strong id="total-pv">—</strong><small>集計イベント</small></article>
+        </div>
+        <div class="panel"><div class="panelhead"><div><h3>クイックアクション</h3><p class="muted">よく使う管理機能</p></div></div>
+          <div class="quickgrid"><button class="quick" data-go="content"><b>＋</b><span>作品・記事を編集</span><small>追加・変更・削除</small></button><button class="quick" data-go="analytics"><b>▥</b><span>アクセス解析</span><small>日別PVを確認</small></button><button class="quick" data-go="settings"><b>⇧</b><span>バックアップ</span><small>JSONを保存・復元</small></button></div>
+        </div>
+        <div class="panel"><h3>システム状態</h3><div class="statusrow"><span>GitHub API</span><b class="ok" id="github-status">確認中</b></div><div class="statusrow"><span>管理者認証</span><b class="ok">認証済み</b></div><div class="statusrow"><span>公開データ</span><b id="data-status">読み込み中</b></div></div>
+      </div>
+      <div id="content" class="view" hidden>
+        <div class="panel">
+          <div class="panelhead"><div><h3>サイトデータ編集</h3><p class="muted">既存の site-data.json を編集します。JSON形式で保存されます。</p></div><span class="chip">JSON CMS</span></div>
+          <div class="toolbar"><button id="reload-data" class="btn ghost">再読み込み</button><button id="format-json" class="btn ghost">整形</button><button id="save-data" class="btn primary">変更をGitHubに保存</button></div>
+          <label class="field">site-data.json<textarea id="json-editor" spellcheck="false"></textarea></label>
+          <p id="content-message" class="message"></p>
+          <div class="hintbox">編集対象：siteName / profile / profileName / profileIcon / works[] / posts[] / contact。作品は works 配列、ブログは posts 配列に追加できます。</div>
+        </div>
+        <div class="panel"><h3>簡易追加ツール</h3><p class="muted">フォームから作品・記事の雛形を追加して、上のJSONエディターで内容を調整できます。</p>
+          <div class="two"><div><h4>作品を追加</h4><label class="field">タイトル<input id="new-work-title"></label><label class="field">カテゴリ<input id="new-work-category"></label><button id="add-work" class="btn secondary">作品を追加</button></div>
+          <div><h4>ブログ記事を追加</h4><label class="field">タイトル<input id="new-post-title"></label><label class="field">カテゴリ<input id="new-post-category"></label><button id="add-post" class="btn secondary">記事を追加</button></div></div>
+        </div>
+      </div>
+      <div id="analytics" class="view" hidden>
+        <div class="panel"><div class="panelhead"><div><h3>アクセス解析</h3><p class="muted">Cookieや個人識別子を使わない簡易PV集計です。</p></div><button id="refresh-analytics" class="btn ghost">更新</button></div>
+          <div class="stats compact"><article class="stat"><span>今日のPV</span><strong id="a-today">—</strong></article><article class="stat"><span>過去7日</span><strong id="a-week">—</strong></article><article class="stat"><span>累計PV</span><strong id="a-total">—</strong></article></div>
+          <div id="analytics-list" class="bars"></div><p id="analytics-message" class="message"></p>
+        </div>
+      </div>
+      <div id="settings" class="view" hidden>
+        <div class="panel"><h3>バックアップ・復元</h3><p class="muted">現在のサイトデータをJSONファイルとして保存できます。</p><div class="toolbar"><button id="backup" class="btn secondary">JSONバックアップをダウンロード</button><label class="btn ghost filebtn">バックアップを読み込む<input id="restore" type="file" accept=".json,application/json"></label></div><p id="settings-message" class="message"></p></div>
+        <div class="panel"><h3>管理システム情報</h3><div class="statusrow"><span>公開リポジトリ</span><b>tahi-mirusen/tahi-mirusen.github.io</b></div><div class="statusrow"><span>ブランチ</span><b>main</b></div><div class="statusrow"><span>データファイル</span><b>site-data.json</b></div><div class="statusrow"><span>認証</span><b>GitHub OAuth + Worker</b></div></div>
+      </div>
+    </section>
+    <footer>TAHI ADMIN <span>GitHub Pages · Cloudflare Workers</span></footer>
+  </main>
+</div>
+<script src="./config.js"></script><script src="./assets/admin.js"></script>
+</body></html>
