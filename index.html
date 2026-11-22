@@ -261,6 +261,29 @@
     .post-actions { margin-top: 16px; }
     .post-actions button { min-height: 44px; }
 
+    .admin-heading { justify-content: space-between; margin-bottom: 16px; }
+    .admin-heading h2 { margin: 0; }
+    .admin-toolbar {
+      position: sticky;
+      z-index: 2;
+      top: 0;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      background: #fff;
+      border: 1px solid #e5eaf0;
+      border-radius: 10px;
+    }
+    .admin-toolbar .actions { justify-content: space-between; }
+    .admin-toolbar label { margin: 0; }
+    .admin-toolbar select { display: inline-block; width: auto; max-width: 100%; margin: 0; }
+    .admin-toolbar button, .admin-toolbar select, .post-image-tool button { min-height: 44px; }
+    #editor-status, #draft-status { margin: 4px 0 0; }
+    #editor [data-admin-panel] { scroll-margin-top: 150px; }
+    .post-image-tool { margin: 0 0 16px; }
+    .post-image-tool summary { cursor: pointer; color: #315ed2; padding-block: 8px; }
+    .post-image-tool .hint { margin: 6px 0; }
+    #post-editor textarea { min-height: 220px; }
+
     #preview-frame {
       display: block;
       width: 100%;
@@ -368,14 +391,14 @@
     </div>
 
     <div id="admin-view" hidden>
-      <div class="actions">
-        <h2>管理画面</h2>
+      <div class="actions admin-heading">
+        <h2 id="admin-title" tabindex="-1">管理画面</h2>
         <button id="close-admin" class="secondary" type="button">
           サイトに戻る
         </button>
       </div>
 
-      <div class="card">
+      <div id="github-connection" class="card">
         <h3>GitHubに接続</h3>
         <p class="hint">
           トークンは接続中のみ使用し、サイトのデータや下書きには保存しません。
@@ -402,10 +425,29 @@
         </label>
 
         <button id="connect" type="button">接続する</button>
+        <p id="status" class="status" role="status"></p>
       </div>
 
       <div id="editor" hidden>
-        <div class="card">
+        <div class="admin-toolbar" aria-label="管理画面の操作">
+          <div class="actions">
+            <label>編集する場所
+              <select id="admin-section">
+                <option value="admin-blog">ブログ</option>
+                <option value="admin-profile">基本情報</option>
+                <option value="admin-works">作品</option>
+                <option value="admin-contact">お問い合わせ先</option>
+                <option value="admin-preview">公開前のプレビュー</option>
+                <option value="admin-backup">バックアップと下書き</option>
+              </select>
+            </label>
+            <button id="save" type="button">変更を保存して公開</button>
+          </div>
+          <p id="draft-status" class="hint" role="status"></p>
+          <p id="editor-status" class="hint" role="status"></p>
+        </div>
+
+        <div id="admin-profile" class="card" data-admin-panel hidden>
           <h3>基本情報</h3>
 
           <label>
@@ -446,7 +488,7 @@
           </label>
         </div>
 
-        <div class="card">
+        <div id="admin-works" class="card" data-admin-panel hidden>
           <h3>作品</h3>
           <div id="work-editor"></div>
           <button id="add-work" class="secondary" type="button">
@@ -454,16 +496,16 @@
           </button>
         </div>
 
-        <div class="card">
+        <div id="admin-blog" class="card" data-admin-panel>
           <h3>ブログ</h3>
-          <p class="hint">ここで記事を書き、プレビューで確認できます。公開は画面下の「変更を保存して公開」から行います。</p>
-          <div id="post-editor"></div>
+          <p class="hint">編集内容はこのブラウザーに下書きとして保存されます。公開するには上のボタンを押してください。</p>
           <button id="add-post" class="secondary" type="button">
             記事を追加
           </button>
+          <div id="post-editor" class="post-preview"></div>
         </div>
 
-        <div class="card">
+        <div id="admin-contact" class="card" data-admin-panel hidden>
           <h3>お問い合わせ先</h3>
 
           <label>
@@ -482,7 +524,7 @@
           </label>
         </div>
 
-        <div class="card">
+        <div id="admin-preview" class="card" data-admin-panel hidden>
           <h3>公開前のプレビュー</h3>
           <p class="hint">
             表示を確認できます。プレビュー内のメニューや検索は操作できません。
@@ -517,7 +559,7 @@
           ></iframe>
         </div>
 
-        <div class="card">
+        <div id="admin-backup" class="card" data-admin-panel hidden>
           <h3>バックアップと復元</h3>
           <p class="hint">
             文章や設定をJSONファイルに保存します。
@@ -536,27 +578,14 @@
           <button id="import-backup" class="secondary" type="button">
             バックアップを読み込む
           </button>
-        </div>
-
-        <div class="card">
-          <h3>保存と公開</h3>
-          <p class="hint">
-            編集内容はこのブラウザーに下書きとして保存されます。
-            サイトへの公開には、下のボタンを押してください。
-          </p>
-
-          <div class="actions">
-            <button id="save" type="button">変更を保存して公開</button>
+          <div class="actions post-actions">
             <button id="discard-draft" class="danger" type="button">
               下書きを破棄
             </button>
           </div>
-
-          <p id="draft-status" class="hint" role="status"></p>
         </div>
       </div>
 
-      <p id="status" class="status" role="status"></p>
     </div>
   </main>
 
@@ -662,15 +691,30 @@
     }
 
     function setStatus(message) {
-      $("status").textContent = message;
+      const editing = !$("editor").hidden;
+      $("status").textContent = editing ? "" : message;
+      $("editor-status").textContent = editing ? message : "";
     }
+
+    function showAdminSection(id) {
+      $("admin-section").value = id;
+      document.querySelectorAll("[data-admin-panel]").forEach((panel) => {
+        panel.hidden = panel.id !== id;
+      });
+      if (id === "admin-preview") updatePreview();
+    }
+
+    $("admin-section").addEventListener("change", (event) => {
+      showAdminSection(event.target.value);
+      $("editor").querySelector(".admin-toolbar").scrollIntoView({ block: "start" });
+    });
 
     function setBusy(value) {
       busy = value;
       document.querySelectorAll(
         "#admin-view button, #admin-view input, #admin-view textarea, #admin-view select"
       ).forEach((control) => {
-        control.disabled = value;
+        control.disabled = value || control.dataset.moveBoundary === "true";
       });
     }
 
@@ -1084,6 +1128,7 @@
       button.disabled = direction < 0
         ? index === 0
         : index === list.length - 1;
+      button.dataset.moveBoundary = String(button.disabled);
 
       button.addEventListener("click", () => {
         const target = index + direction;
@@ -1124,6 +1169,55 @@
       });
       box.insertBefore(toolbar, input.closest("label"));
       box.insertBefore(element("p", "装飾ボタンで書式を挿入できます。リンクや画像のサンプルURLは、使いたいURLに置き換えてください。", "hint"), input.closest("label"));
+    }
+
+    const postImageExtensions = new Map([
+      ["image/png", "png"], ["image/jpeg", "jpg"],
+      ["image/gif", "gif"], ["image/webp", "webp"]
+    ]);
+
+    function postImageUpload(label, applyImage, refresh) {
+      const details = element("details", undefined, "post-image-tool");
+      const input = element("input");
+      input.type = "file";
+      input.accept = [...postImageExtensions.keys()].join(",");
+      const fileLabel = element("label", "画像ファイルを選ぶ");
+      fileLabel.append(input);
+      const button = element("button", "選んだ画像を追加", "secondary");
+      button.type = "button";
+      const note = element("p", "PNG・JPEG・GIF・WebP、5MBまで。画像ファイルはすぐに公開リポジトリに置かれます。記事の本文や表紙への反映は、記事を公開するときに行われます。", "hint");
+      const feedback = element("p", "", "hint");
+      feedback.setAttribute("role", "status");
+      details.append(element("summary", label), fileLabel, note, button, feedback);
+
+      button.addEventListener("click", async () => {
+        if (busy || !connection) return;
+        const file = input.files[0];
+        const extension = file && postImageExtensions.get(file.type);
+        if (!extension || !file.size || file.size > 5 * 1024 * 1024) {
+          feedback.textContent = "5MB以下のPNG・JPEG・GIF・WebP画像を選んでください。";
+          return;
+        }
+
+        setBusy(true);
+        feedback.textContent = "画像をアップロードしています…";
+        try {
+          const bitmap = await createImageBitmap(file);
+          bitmap.close();
+          const path = `uploads/${crypto.randomUUID()}.${extension}`;
+          await createFile(path, bytesToBase64(new Uint8Array(await file.arrayBuffer())), "ブログ画像を追加");
+          applyImage(path);
+          saveDraft();
+          refresh();
+          input.value = "";
+          feedback.textContent = "画像を追加しました。プレビューへの表示には少し時間がかかることがあります。";
+        } catch (error) {
+          feedback.textContent = `画像を追加できませんでした: ${error.message}`;
+        } finally {
+          setBusy(false);
+        }
+      });
+      return details;
     }
 
     function renderEditors() {
@@ -1271,9 +1365,13 @@
           post.category = value;
         });
 
-        field(box, "表紙画像のURLまたはパス（任意）", post.cover, (value) => {
+        const cover = field(box, "表紙画像のURLまたはパス（任意）", post.cover, (value) => {
           post.cover = value;
         });
+        box.append(postImageUpload("表紙画像をアップロード", (path) => {
+          post.cover = path;
+          cover.value = path;
+        }, refresh));
 
         field(box, "表紙画像の説明（任意）", post.coverAlt, (value) => {
           post.coverAlt = value;
@@ -1302,6 +1400,14 @@
           format.value = post.format;
           refresh();
         });
+        box.append(postImageUpload("本文に画像をアップロード", (path) => {
+          const endOfLine = body.value.indexOf("\n", body.selectionEnd);
+          const start = endOfLine < 0 ? body.value.length : endOfLine + 1;
+          const before = start > 0 && body.value[start - 1] !== "\n" ? "\n" : "";
+          body.setRangeText(`${before}![画像の説明](${path})\n`, start, start, "end");
+          post.body = body.value;
+          post.format = format.value = "markdown";
+        }, refresh));
         box.append(preview);
 
         const actions = element("div", undefined, "actions");
@@ -1501,6 +1607,7 @@
     $("open-admin").addEventListener("click", () => {
       $("public-view").hidden = true;
       $("admin-view").hidden = false;
+      $("admin-title").focus();
     });
 
     $("close-admin").addEventListener("click", () => {
@@ -1508,6 +1615,8 @@
       loadedSha = null;
       $("token").value = "";
       $("editor").hidden = true;
+      $("github-connection").hidden = false;
+      $("draft-status").textContent = "";
       $("preview-frame").srcdoc = "";
 
       data = cloneData(publishedData);
@@ -1516,6 +1625,7 @@
       $("admin-view").hidden = true;
       $("public-view").hidden = false;
       setStatus("");
+      $("open-admin").focus();
     });
 
     [
@@ -1637,6 +1747,7 @@
 
       saveDraft();
       renderEditors();
+      $("post-editor").querySelector("input").focus();
     });
 
     $("export-backup").addEventListener("click", () => {
@@ -1787,6 +1898,8 @@
 
         $("token").value = "";
         $("editor").hidden = false;
+        $("github-connection").hidden = true;
+        showAdminSection("admin-blog");
         renderEditors();
 
         setStatus(
@@ -1796,12 +1909,14 @@
         connection = null;
         loadedSha = null;
         $("editor").hidden = true;
+        $("github-connection").hidden = false;
         setStatus(`接続できませんでした: ${error.message}`);
       } finally {
         setBusy(false);
 
         if (connection) {
           renderEditors();
+          $("admin-section").focus();
         }
       }
     });
