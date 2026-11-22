@@ -260,6 +260,12 @@
     .post-preview summary { cursor: pointer; padding-block: 10px; }
     .post-actions { margin-top: 16px; }
     .post-actions button { min-height: 44px; }
+    .post-comments { margin-top: 24px; }
+    .post-comments ol { padding: 0; list-style: none; }
+    .post-comments li { padding: 12px 0 0; border-top: 1px solid #e5eaf0; overflow-wrap: anywhere; }
+    .post-comments li p { margin: 6px 0 12px; }
+    .post-comments button { min-height: 44px; }
+    .comment-trap { display: none; }
 
     #external-link-dialog {
       width: min(440px, calc(100% - 32px));
@@ -1062,7 +1068,127 @@
       actions.append(copy, feedback);
       article.append(actions);
       container.append(article);
+      container.append(makePostComments(post));
       if (focus) article.querySelector("h2").focus();
+    }
+
+    function makePostComments(post) {
+      const section = element("section", undefined, "card post-comments");
+      const list = element("ol");
+      const status = element("p", "コメントを読み込んでいます…", "hint");
+      status.setAttribute("role", "status");
+      const load = element("button", "再読み込み", "secondary");
+      load.type = "button";
+      load.hidden = true;
+      const more = element("button", "前のコメントを表示", "secondary");
+      more.type = "button";
+      more.hidden = true;
+      const form = element("form");
+      const name = element("input");
+      name.maxLength = 30;
+      name.placeholder = "名無しさん";
+      const body = element("textarea");
+      body.maxLength = 1000;
+      body.required = true;
+      const trap = element("input");
+      trap.tabIndex = -1;
+      trap.autocomplete = "off";
+      const label = (text, control, className) => {
+        const item = element("label", text, className);
+        item.append(control);
+        return item;
+      };
+      const submit = element("button", "コメントを投稿");
+      submit.type = "submit";
+      form.append(label("名前（任意）", name), label("コメント（1,000文字まで）", body),
+        label("この欄は空欄のままにしてください", trap, "comment-trap"),
+        element("p", "ログイン不要です。投稿は公開されるので、個人情報は書かないでください。", "hint"), submit);
+      section.append(element("h3", "コメント"), list, more, load, status, form);
+
+      const url = new URL("https://tahi-blog-comments.sabsabudayo.workers.dev/comments");
+      url.searchParams.set("article", post.id);
+      let cursor = null;
+      let loading = false;
+      const rendered = new Set();
+
+      function row(comment) {
+        const item = element("li");
+        const when = new Intl.DateTimeFormat("ja-JP", {
+          dateStyle: "short", timeStyle: "short", timeZone: "Asia/Tokyo"
+        }).format(comment.created_at);
+        item.append(element("p", `${comment.number}：${comment.name}　${when} JST`, "post-meta"),
+          element("p", comment.body, "multiline"));
+        rendered.add(comment.number);
+        return item;
+      }
+
+      async function refresh(older = false) {
+        if (loading) return;
+        loading = true;
+        load.hidden = true;
+        more.disabled = true;
+        submit.disabled = true;
+        const endpoint = new URL(url);
+        if (older && cursor) endpoint.searchParams.set("before", cursor);
+        try {
+          const response = await fetch(endpoint, { signal: AbortSignal.timeout(10000) });
+          if (!response.ok) throw new Error();
+          const result = await response.json();
+          if (!older) {
+            list.replaceChildren();
+            rendered.clear();
+          }
+          const rows = result.comments.filter((comment) => !rendered.has(comment.number)).map(row);
+          list.prepend(...rows);
+          cursor = result.before;
+          more.hidden = !cursor;
+          status.textContent = list.children.length ? "" : "まだコメントはありません。";
+        } catch {
+          status.textContent = "コメントを読み込めませんでした。";
+          load.hidden = false;
+        } finally {
+          loading = false;
+          more.disabled = false;
+          submit.disabled = false;
+        }
+      }
+
+      more.addEventListener("click", () => refresh(true));
+      load.addEventListener("click", () => refresh());
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (submit.disabled) return;
+        if (!body.value.trim()) {
+          status.textContent = "コメントを入力してください。";
+          body.focus();
+          return;
+        }
+        submit.disabled = more.disabled = load.disabled = true;
+        status.textContent = "投稿しています…";
+        try {
+          const response = await fetch(url, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: name.value, body: body.value, website: trap.value }),
+            signal: AbortSignal.timeout(10000)
+          });
+          if (response.status === 429) {
+            status.textContent = "投稿の間隔を空けるか、同じ内容の再投稿は避けてください。";
+            return;
+          }
+          if (!response.ok) throw new Error();
+          const { comment } = await response.json();
+          if (!rendered.has(comment.number)) list.append(row(comment));
+          form.reset();
+          status.textContent = `コメント ${comment.number} を投稿しました。`;
+        } catch {
+          status.textContent = "投稿を確認できませんでした。コメントを読み直してから再度お試しください。";
+          load.hidden = false;
+        } finally {
+          submit.disabled = more.disabled = load.disabled = false;
+        }
+      });
+      refresh();
+      return section;
     }
 
     function renderContact() {
