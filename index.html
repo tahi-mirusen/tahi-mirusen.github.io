@@ -261,6 +261,27 @@
     .post-actions { margin-top: 16px; }
     .post-actions button { min-height: 44px; }
 
+    #external-link-dialog {
+      width: min(440px, calc(100% - 32px));
+      padding: 24px;
+      color: #253041;
+      border: 1px solid #e5eaf0;
+      border-radius: 14px;
+    }
+    #external-link-dialog::backdrop { background: rgb(37 48 65 / 45%); }
+    #external-link-host { overflow-wrap: anywhere; }
+    #external-link-dialog .actions { justify-content: flex-end; }
+    #external-link-dialog .actions > * { min-height: 44px; }
+    #external-link-open {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      color: #fff;
+      background: #315ed2;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
     .admin-heading { justify-content: space-between; margin-bottom: 16px; }
     .admin-heading h2 { margin: 0; }
     .admin-toolbar {
@@ -584,6 +605,15 @@
     </div>
   </main>
 
+  <dialog id="external-link-dialog" aria-labelledby="external-link-title" aria-describedby="external-link-host">
+    <h2 id="external-link-title">外部サイトを開きますか？</h2>
+    <p id="external-link-host" class="hint"></p>
+    <form method="dialog" class="actions">
+      <button type="submit" class="secondary" autofocus>キャンセル</button>
+      <a id="external-link-open" target="_blank" rel="noopener noreferrer">外部サイトを開く</a>
+    </form>
+  </dialog>
+
   <script>
     const $ = (id) => document.getElementById(id);
 
@@ -701,6 +731,25 @@
       link.rel = "noopener noreferrer";
       parent.append(link);
     }
+
+    const externalDialog = $("external-link-dialog");
+    const externalOpen = $("external-link-open");
+
+    function confirmExternalLink(event) {
+      if (event.defaultPrevented || (event.type === "auxclick" && event.button !== 1)) return;
+      const link = event.target.closest?.("a[href]");
+      if (!link || link === externalOpen) return;
+      const url = new URL(link.href);
+      if (!["https:", "http:"].includes(url.protocol) || url.origin === location.origin) return;
+      event.preventDefault();
+      $("external-link-host").textContent = `移動先：${url.host}`;
+      externalOpen.href = url.href;
+      if (!externalDialog.open) externalDialog.showModal();
+    }
+
+    document.addEventListener("click", confirmExternalLink);
+    document.addEventListener("auxclick", confirmExternalLink);
+    externalOpen.addEventListener("click", () => setTimeout(() => externalDialog.close(), 0));
 
     function setStatus(message) {
       const editing = !$("editor").hidden;
