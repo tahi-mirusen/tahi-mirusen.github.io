@@ -540,25 +540,6 @@
           <div id="post-editor" class="post-preview"></div>
         </div>
 
-        <div id="admin-comments" class="card" data-admin-panel hidden>
-          <h3>コメント管理</h3>
-          <label>記事<select id="moderation-article"></select></label>
-          <label>コメント管理キー<input id="moderation-key" type="password" autocomplete="off"></label>
-          <button id="moderation-load" type="button">コメントを読み込む</button>
-          <p id="moderation-status" class="hint" role="status"></p>
-          <div id="moderation-list"></div>
-          <button id="moderation-more" class="secondary" type="button" hidden>前のコメントを表示</button>
-          <details class="post-preview">
-            <summary>初回：管理キーを作る</summary>
-            <p class="hint">管理キーは他の人に渡さず、自分で保管してください。Cloudflareで Worker「tahi-blog-comments」の Settings → Variables and Secrets を開き、Secret「COMMENTS_ADMIN_HASH」として下の確認用コードを登録してください。管理キーそのものはCloudflareに貼り付けないでください。</p>
-            <button id="moderation-generate" class="secondary" type="button">新しい管理キーを作る</button>
-            <div id="moderation-setup" hidden>
-              <label>管理キー（非公開）<input id="moderation-generated-key" type="password" autocomplete="off" readonly></label>
-              <button id="moderation-copy-key" class="secondary" type="button">管理キーをコピー</button>
-              <label>確認用コード（COMMENTS_ADMIN_HASH）<input id="moderation-generated-hash" readonly></label>
-            </div>
-          </details>
-        </div>
 
         <div id="admin-contact" class="card" data-admin-panel hidden>
           <h3>お問い合わせ先</h3>
