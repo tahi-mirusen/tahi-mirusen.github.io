@@ -461,6 +461,7 @@
             <label>編集する場所
               <select id="admin-section">
                 <option value="admin-blog">ブログ</option>
+                <option value="admin-comments">コメント管理</option>
                 <option value="admin-profile">基本情報</option>
                 <option value="admin-works">作品</option>
                 <option value="admin-contact">お問い合わせ先</option>
@@ -530,6 +531,26 @@
             記事を追加
           </button>
           <div id="post-editor" class="post-preview"></div>
+        </div>
+
+        <div id="admin-comments" class="card" data-admin-panel hidden>
+          <h3>コメント管理</h3>
+          <label>記事<select id="moderation-article"></select></label>
+          <label>コメント管理キー<input id="moderation-key" type="password" autocomplete="off"></label>
+          <button id="moderation-load" type="button">コメントを読み込む</button>
+          <p id="moderation-status" class="hint" role="status"></p>
+          <div id="moderation-list"></div>
+          <button id="moderation-more" class="secondary" type="button" hidden>前のコメントを表示</button>
+          <details class="post-preview">
+            <summary>初回：管理キーを作る</summary>
+            <p class="hint">管理キーは他の人に渡さず、自分で保管してください。Cloudflareで Worker「tahi-blog-comments」の Settings → Variables and Secrets を開き、Secret「COMMENTS_ADMIN_HASH」として下の確認用コードを登録してください。管理キーそのものはCloudflareに貼り付けないでください。</p>
+            <button id="moderation-generate" class="secondary" type="button">新しい管理キーを作る</button>
+            <div id="moderation-setup" hidden>
+              <label>管理キー（非公開）<input id="moderation-generated-key" type="password" autocomplete="off" readonly></label>
+              <button id="moderation-copy-key" class="secondary" type="button">管理キーをコピー</button>
+              <label>確認用コード（COMMENTS_ADMIN_HASH）<input id="moderation-generated-hash" readonly></label>
+            </div>
+          </details>
         </div>
 
         <div id="admin-contact" class="card" data-admin-panel hidden>
@@ -622,6 +643,7 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const COMMENTS_ORIGIN = "https://tahi-blog-comments.sabsabudayo.workers.dev";
 
     const initialData = () => ({
       siteName: "マイサイト",
@@ -769,6 +791,7 @@
         panel.hidden = panel.id !== id;
       });
       if (id === "admin-preview") updatePreview();
+      if (id === "admin-comments") renderModerationOptions();
     }
 
     $("admin-section").addEventListener("change", (event) => {
@@ -1100,12 +1123,25 @@
       };
       const submit = element("button", "コメントを投稿");
       submit.type = "submit";
-      form.append(label("名前（任意）", name), label("コメント（1,000文字まで）", body),
+      let replyTo = null;
+      const replyBox = element("div", undefined, "actions");
+      replyBox.hidden = true;
+      const replyTarget = element("span", "", "hint");
+      const clearReply = element("button", "返信を解除", "secondary");
+      clearReply.type = "button";
+      const selectReply = (number) => {
+        replyTo = number;
+        replyTarget.textContent = number ? `>>${number} に返信` : "";
+        replyBox.hidden = !number;
+      };
+      clearReply.addEventListener("click", () => { selectReply(null); body.focus(); });
+      replyBox.append(replyTarget, clearReply);
+      form.append(replyBox, label("名前（任意）", name), label("コメント（1,000文字まで）", body),
         label("この欄は空欄のままにしてください", trap, "comment-trap"),
         element("p", "ログイン不要です。投稿は公開されるので、個人情報は書かないでください。", "hint"), submit);
       section.append(element("h3", "コメント"), list, more, load, status, form);
 
-      const url = new URL("https://tahi-blog-comments.sabsabudayo.workers.dev/comments");
+      const url = new URL("/comments", COMMENTS_ORIGIN);
       url.searchParams.set("article", post.id);
       let cursor = null;
       let loading = false;
@@ -1113,11 +1149,31 @@
 
       function row(comment) {
         const item = element("li");
+        item.id = `comment-${comment.number}`;
+        item.tabIndex = -1;
         const when = new Intl.DateTimeFormat("ja-JP", {
           dateStyle: "short", timeStyle: "short", timeZone: "Asia/Tokyo"
         }).format(comment.created_at);
-        item.append(element("p", `${comment.number}：${comment.name}　${when} JST`, "post-meta"),
-          element("p", comment.body, "multiline"));
+        item.append(element("p", `${comment.number}：${comment.name}　${when} JST`, "post-meta"));
+        const quoted = /^>>(\d+)\n/.exec(comment.body);
+        if (quoted) {
+          const jump = element("button", `>>${quoted[1]}`, "secondary");
+          jump.type = "button";
+          jump.addEventListener("click", async () => {
+            while (!list.querySelector(`#comment-${quoted[1]}`) && cursor && Number(quoted[1]) < cursor) {
+              if (!(await refresh(true))) break;
+            }
+            const target = list.querySelector(`#comment-${quoted[1]}`);
+            if (target) target.focus();
+            else status.textContent = "返信先のコメントは表示できません。";
+          });
+          item.append(jump);
+        }
+        const reply = element("button", "返信", "secondary");
+        reply.type = "button";
+        reply.setAttribute("aria-label", `コメント ${comment.number} に返信`);
+        reply.addEventListener("click", () => { selectReply(comment.number); body.focus(); });
+        item.append(element("p", quoted ? comment.body.slice(quoted[0].length) : comment.body, "multiline"), reply);
         rendered.add(comment.number);
         return item;
       }
@@ -1143,6 +1199,7 @@
           cursor = result.before;
           more.hidden = !cursor;
           status.textContent = list.children.length ? "" : "まだコメントはありません。";
+          return true;
         } catch {
           status.textContent = "コメントを読み込めませんでした。";
           load.hidden = false;
@@ -1168,17 +1225,22 @@
         try {
           const response = await fetch(url, {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: name.value, body: body.value, website: trap.value }),
+            body: JSON.stringify({ name: name.value, body: body.value, website: trap.value, replyTo }),
             signal: AbortSignal.timeout(10000)
           });
           if (response.status === 429) {
             status.textContent = "投稿の間隔を空けるか、同じ内容の再投稿は避けてください。";
             return;
           }
+          if (response.status === 409) {
+            status.textContent = "返信先が非表示になったか、見つかりません。返信を解除すると通常のコメントとして投稿できます。";
+            return;
+          }
           if (!response.ok) throw new Error();
           const { comment } = await response.json();
           if (!rendered.has(comment.number)) list.append(row(comment));
           form.reset();
+          selectReply(null);
           status.textContent = `コメント ${comment.number} を投稿しました。`;
         } catch {
           status.textContent = "投稿を確認できませんでした。コメントを読み直してから再度お試しください。";
@@ -1190,6 +1252,122 @@
       refresh();
       return section;
     }
+
+    let moderationCursor = null;
+    let moderationBusy = false;
+    let moderationSession = 0;
+
+    function resetModeration(clearKey = false) {
+      moderationCursor = null;
+      moderationSession++;
+      $("moderation-list").replaceChildren();
+      $("moderation-more").hidden = true;
+      $("moderation-status").textContent = "";
+      if (clearKey) {
+        $("moderation-key").value = "";
+        $("moderation-generated-key").value = "";
+        $("moderation-generated-hash").value = "";
+        $("moderation-setup").hidden = true;
+      }
+    }
+
+    function renderModerationOptions() {
+      const select = $("moderation-article");
+      const selected = select.value;
+      select.replaceChildren(...publishedData.posts.map((post) => {
+        const option = element("option", post.title || "無題");
+        option.value = post.id;
+        return option;
+      }));
+      if (publishedData.posts.some((post) => post.id === selected)) select.value = selected;
+      resetModeration();
+      if (!select.value) $("moderation-status").textContent = "公開済みの記事がありません。";
+    }
+
+    async function moderate(options = {}) {
+      if (moderationBusy) return;
+      const article = $("moderation-article").value;
+      const key = $("moderation-key").value.trim();
+      const status = $("moderation-status");
+      if (!article) return;
+      if (!/^[a-zA-Z0-9_-]{24,128}$/.test(key)) {
+        status.textContent = "コメント管理キーを入力してください。";
+        $("moderation-key").focus();
+        return;
+      }
+      const session = moderationSession;
+      const url = new URL("/moderation", COMMENTS_ORIGIN);
+      url.searchParams.set("article", article);
+      if (options.older && moderationCursor) url.searchParams.set("before", moderationCursor);
+      if (options.number) {
+        url.searchParams.set("number", options.number);
+        url.searchParams.set("hidden", options.hidden ? "1" : "0");
+      }
+      moderationBusy = true;
+      status.textContent = options.number ? "更新しています…" : "読み込んでいます…";
+      try {
+        const response = await fetch(url, {
+          method: options.number ? "PATCH" : "GET",
+          headers: { Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(10000)
+        });
+        if (response.status === 403) throw new Error("管理キーが違うか、Cloudflareに確認用コードが未登録です。");
+        if (!response.ok) throw new Error("コメント管理に接続できませんでした。");
+        const result = await response.json();
+        if (session !== moderationSession) return;
+        if (options.number) {
+          const hidden = Boolean(result.comment.hidden);
+          options.row.querySelector("button").textContent = hidden ? "再表示" : "非表示";
+          options.row.querySelector(".post-meta").textContent = `${options.number}：${options.name}（${hidden ? "非表示" : "表示中"}）`;
+          options.row.dataset.hidden = String(hidden);
+          status.textContent = hidden ? "コメントを非表示にしました。" : "コメントを再表示しました。";
+          return;
+        }
+        const list = $("moderation-list");
+        if (!options.older) list.replaceChildren();
+        result.comments.forEach((comment) => {
+          const row = element("div", undefined, "editor-item");
+          row.dataset.hidden = String(Boolean(comment.hidden));
+          row.append(element("p", `${comment.number}：${comment.name}（${comment.hidden ? "非表示" : "表示中"}）`, "post-meta"),
+            element("p", comment.body, "multiline"));
+          const toggle = element("button", comment.hidden ? "再表示" : "非表示", "secondary");
+          toggle.type = "button";
+          toggle.addEventListener("click", () => moderate({ number: comment.number, name: comment.name, hidden: row.dataset.hidden === "false", row }));
+          row.append(toggle);
+          list.append(row);
+        });
+        moderationCursor = result.before;
+        $("moderation-more").hidden = !moderationCursor;
+        status.textContent = list.children.length ? "" : "この記事にはまだコメントがありません。";
+      } catch (error) {
+        if (session === moderationSession) status.textContent = error.message || "読み込めませんでした。";
+      } finally {
+        moderationBusy = false;
+      }
+    }
+
+    $("moderation-article").addEventListener("change", () => resetModeration());
+    $("moderation-key").addEventListener("input", () => resetModeration());
+    $("moderation-load").addEventListener("click", () => moderate());
+    $("moderation-more").addEventListener("click", () => moderate({ older: true }));
+    $("moderation-generate").addEventListener("click", async () => {
+      const session = moderationSession;
+      const key = Array.from(crypto.getRandomValues(new Uint8Array(24)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key)));
+      if (session !== moderationSession) return;
+      $("moderation-generated-key").value = key;
+      $("moderation-generated-hash").value = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      $("moderation-setup").hidden = false;
+    });
+    $("moderation-copy-key").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText($("moderation-generated-key").value);
+        $("moderation-status").textContent = "管理キーをコピーしました。安全な場所に保管してください。";
+      } catch {
+        $("moderation-generated-key").select();
+        $("moderation-status").textContent = "選択した管理キーをコピーしてください。";
+      }
+    });
 
     function renderContact() {
       const container = $("contact");
@@ -1823,6 +2001,7 @@
     });
 
     $("close-admin").addEventListener("click", () => {
+      resetModeration(true);
       connection = null;
       loadedSha = null;
       $("token").value = "";
