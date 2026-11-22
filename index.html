@@ -260,6 +260,14 @@
     .post-preview summary { cursor: pointer; padding-block: 10px; }
     .post-actions { margin-top: 16px; }
     .post-actions button { min-height: 44px; }
+    .post-share {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid #e5eaf0;
+      border-radius: 8px;
+    }
     .post-comments { margin-top: 24px; }
     .post-comments ol { padding: 0; list-style: none; }
     .post-comments li { padding: 12px 0 0; border-top: 1px solid #e5eaf0; overflow-wrap: anywhere; }
@@ -1073,15 +1081,29 @@
       document.title = `${post.title || "無題"} | ${data.siteName}`;
       const article = makePostArticle(post);
       const actions = element("div", undefined, "actions post-actions");
+      const url = new URL(location.href);
+      url.search = "";
+      url.hash = postRoute(post.id);
+
+      const xShare = new URL("https://twitter.com/intent/tweet");
+      xShare.searchParams.set("text", post.title || "無題");
+      xShare.searchParams.set("url", url.href);
+      const lineShare = new URL("https://social-plugins.line.me/lineit/share");
+      lineShare.searchParams.set("url", url.href);
+      [["Xでシェア", xShare], ["LINEでシェア", lineShare]].forEach(([label, target]) => {
+        const link = element("a", label, "post-share");
+        link.href = target.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        actions.append(link);
+      });
+
       const copy = element("button", "記事のリンクをコピー", "secondary");
       copy.type = "button";
       const feedback = element("span", "", "hint");
       feedback.setAttribute("role", "status");
       copy.addEventListener("click", async () => {
         try {
-          const url = new URL(location.href);
-          url.search = "";
-          url.hash = postRoute(post.id);
           await navigator.clipboard.writeText(url.href);
           feedback.textContent = "リンクをコピーしました。";
         } catch {
