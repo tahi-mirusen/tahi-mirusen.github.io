@@ -12,21 +12,13 @@
   "posts": [
     {
       "id": "entry-4f1dea13-9eb1-4610-93e7-d6022300b16e",
-      "title": "",
-      "date": "",
-      "category": "",
-      "body": "",
-      "format": "markdown",
-      "cover": "",
-      "coverAlt": ""
-    },
-    {
-      "title": "ああこんにちは",
+      "title": "自己紹介",
       "date": "1919/8/10",
       "category": "自己紹介",
       "body": "# どうも皆さんこんにちは私です\n\nということで私自己紹介をしたいと思いまーす\n\n年齢は1から100歳のどれかで、\nどこに住んでいるかというと、関東です。\n趣味はパソコンと地震観察かな\nパソコンは15万円のでぇす\nスペックはこんな感じ\nRyzen7 5700x\n16GB\nRTX4060\n500GB\n\nSSDが弱いのとメモリが弱いのでこれを強くすればほぼなんでも行けるスペックって感じ、\nまあこれから色々やっていこうと思うのでね\nスクラッチのフォローよろぴく\n[スクラッチ（外部リンク）](https://scratch.mit.edu/users/aakonnitiha-_-/)\nほんならばい",
-      "id": "entry-g6vvtr",
-      "format": "markdown"
+      "format": "markdown",
+      "cover": "",
+      "coverAlt": ""
     }
   ],
   "profileName": "ああ、こんにちは-_-",
