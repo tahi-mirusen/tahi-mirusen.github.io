@@ -1,7 +1,0 @@
-name = "tahi-admin-api"
-main = "worker.js"
-compatibility_date = "2026-11-21"
-
-[[kv_namespaces]]
-binding = "SESSIONS"
-id = "61f359b2ab7e4fe58c1b54989b87c576"
