@@ -33,7 +33,15 @@
   "profileIcon": "uploads/a8f62cca-c792-4c3c-a9c5-1bb5792c7998.png",
   "contact": {
     "email": "aakonnnitha-_-@sute.jp",
-    "socialName": "lit.link",
-    "socialUrl": "https://lit.link/aakonnitiha-_-/"
+    "socials": [
+      {
+        "name": "lit.link",
+        "url": "https://lit.link/aakonnitiha-_-/"
+      },
+      {
+        "name": "スクラッチ",
+        "url": "https://scratch.mit.edu/users/aakonnitiha-_-/"
+      }
+    ]
   }
 }
