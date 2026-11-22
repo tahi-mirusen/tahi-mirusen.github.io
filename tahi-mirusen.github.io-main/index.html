@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>マイサイト</title>
+
+  <style>
+    :root {
+      font-family: sans-serif;
+      color: #253041;
+      background: #f6f8fb;
+      line-height: 1.8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5eaf0;
+    }
+
+    .wrap {
+      width: min(960px, calc(100% - 32px));
+      margin: auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 0;
+      font-size: 1.3rem;
+    }
+
+    main {
+      padding: 32px 0 64px;
+    }
+
+    .card {
+      padding: 24px;
+      margin-bottom: 16px;
+      background: #fff;
+      border: 1px solid #e5eaf0;
+      border-radius: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(240px, 100%), 1fr)
+      );
+      gap: 16px;
+    }
+
+    .grid .card {
+      margin-bottom: 0;
+    }
+
+    .multiline {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .profile-icon {
+      display: block;
+      width: 96px;
+      height: 96px;
+      margin-bottom: 16px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    a {
+      color: #315ed2;
+      overflow-wrap: anywhere;
+    }
+    .admin-link {
+      display:inline-flex; align-items:center; padding:8px 14px;
+      border-radius:999px; background:#e9edf3; color:#253041;
+      text-decoration:none; font-weight:600;
+    }
+    .admin-link:hover { background:#dce4f0; }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 8px 14px;
+      color: #fff;
+      background: #315ed2;
+      border: 0;
+      border-radius: 8px;
+    }
+
+    button.secondary {
+      color: #253041;
+      background: #e9edf3;
+    }
+
+    button.danger {
+      color: #a32f3b;
+      background: #fcebed;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    input, textarea, select {
+      display: block;
+      width: 100%;
+      margin-top: 5px;
+      padding: 9px 11px;
+      color: #253041;
+      background: #fff;
+      border: 1px solid #cdd6e1;
+      border-radius: 8px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hint {
+      color: #627086;
+      font-size: 0.9rem;
+    }
+
+    .status {
+      min-height: 1.8em;
+      color: #315ed2;
+    }
+
+    .editor-item {
+      padding: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #dce3ec;
+      border-radius: 10px;
+    }
+
+    .filter-controls {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(220px, 100%), 1fr)
+      );
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    #public-view {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 32px;
+      align-items: start;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 24px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid #e5eaf0;
+      border-radius: 14px;
+    }
+
+    .site-nav a {
+      display: block;
+      padding: 10px 12px;
+      color: #253041;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    .site-nav a[aria-current="page"] {
+      color: #315ed2;
+      background: #f0f4ff;
+    }
+
+    .public-content {
+      min-width: 0;
+    }
+
+    #preview-frame {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: 650px;
+      margin: 16px auto 0;
+      background: #fff;
+      border: 1px solid #cdd6e1;
+      border-radius: 8px;
+    }
+
+    #preview-frame.mobile {
+      width: 375px;
+    }
+
+    @media (max-width: 640px) {
+      #public-view {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .site-nav {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap header-inner">
+      <h1 id="site-name">マイサイト</h1>
+      <a class="admin-link" href="./admin/">管理者ログイン</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="public-view">
+      <nav class="site-nav" aria-label="サイトメニュー">
+        <a href="#about">自己紹介</a>
+        <a href="#works-section">作品</a>
+        <a href="#blog-section">ブログ</a>
+        <a href="#contact-section">お問い合わせ</a>
+      </nav>
+
+      <div class="public-content">
+        <section id="about">
+          <h2>自己紹介</h2>
+          <div class="card">
+            <img id="profile-icon" class="profile-icon" alt="" hidden>
+            <h3 id="profile-name" hidden></h3>
+            <p id="profile" class="multiline"></p>
+          </div>
+        </section>
+
+        <section id="works-section" hidden>
+          <h2>作品</h2>
+          <div class="filter-controls">
+            <label>
+              キーワード検索
+              <input id="work-search" type="search">
+            </label>
+            <label>
+              カテゴリ
+              <select id="work-category"></select>
+            </label>
+          </div>
+          <div id="works" class="grid"></div>
+          <p id="works-empty" class="hint" hidden>
+            該当する作品はありません。
+          </p>
+        </section>
+
+        <section id="blog-section" hidden>
+          <h2>ブログ</h2>
+          <div class="filter-controls">
+            <label>
+              キーワード検索
+              <input id="post-search" type="search">
+            </label>
+            <label>
+              カテゴリ
+              <select id="post-category"></select>
+            </label>
+          </div>
+          <div id="posts"></div>
+          <p id="posts-empty" class="hint" hidden>
+            該当する記事はありません。
+          </p>
+        </section>
+
+        <section id="contact-section" hidden>
+          <h2>お問い合わせ</h2>
+          <div id="contact" class="card"></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="admin-view" hidden>
+      <div class="actions">
+        <h2>管理画面</h2>
+        <button id="close-admin" class="secondary" type="button">
+          サイトに戻る
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>GitHubに接続</h3>
+        <p class="hint">
+          トークンは接続中のみ使用し、サイトのデータや下書きには保存しません。
+        </p>
+
+        <label>
+          ユーザー名
+          <input id="owner" autocomplete="off">
+        </label>
+
+        <label>
+          リポジトリ名
+          <input id="repo" autocomplete="off">
+        </label>
+
+        <label>
+          公開に使うブランチ
+          <input id="branch" value="main" autocomplete="off">
+        </label>
+
+        <label>
+          GitHubのアクセストークン
+          <input id="token" type="password" autocomplete="off">
+        </label>
+
+        <button id="connect" type="button">接続する</button>
+      </div>
+
+      <div id="editor" hidden>
+        <div class="card">
+          <h3>基本情報</h3>
+
+          <label>
+            サイト名
+            <input id="edit-name">
+          </label>
+
+          <label>
+            自己紹介に表示する名前
+            <input id="edit-profile-name">
+          </label>
+
+          <label>
+            アイコン画像のURLまたはパス
+            <input id="edit-profile-icon" placeholder="例：images/icon.png">
+          </label>
+
+          <label>
+            アイコン画像を選択
+            <input
+              id="profile-icon-file"
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+            >
+          </label>
+
+          <button id="upload-profile-icon" type="button">
+            アイコン画像をアップロード
+          </button>
+
+          <p class="hint">
+            PNG・JPEG・GIF・WebP形式、5MBまで。
+          </p>
+
+          <label>
+            自己紹介
+            <textarea id="edit-profile"></textarea>
+          </label>
+        </div>
+
+        <div class="card">
+          <h3>作品</h3>
+          <div id="work-editor"></div>
+          <button id="add-work" class="secondary" type="button">
+            作品を追加
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>ブログ</h3>
+          <div id="post-editor"></div>
+          <button id="add-post" class="secondary" type="button">
+            記事を追加
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>お問い合わせ先</h3>
+
+          <label>
+            メールアドレス
+            <input id="edit-email" type="email">
+          </label>
+
+          <label>
+            SNSの名前
+            <input id="edit-social-name" placeholder="例：Instagram">
+          </label>
+
+          <label>
+            SNSのURL
+            <input id="edit-social-url" type="url" placeholder="https://">
+          </label>
+        </div>
+
+        <div class="card">
+          <h3>公開前のプレビュー</h3>
+          <p class="hint">
+            表示を確認できます。プレビュー内のメニューや検索は操作できません。
+          </p>
+
+          <label>
+            表示するページ
+            <select id="preview-section">
+              <option value="about">自己紹介</option>
+              <option value="works-section">作品</option>
+              <option value="blog-section">ブログ</option>
+              <option value="contact-section">お問い合わせ</option>
+            </select>
+          </label>
+
+          <div class="actions">
+            <button id="preview-desktop" class="secondary" type="button">
+              パソコン表示
+            </button>
+            <button id="preview-mobile" class="secondary" type="button">
+              スマホ表示
+            </button>
+            <button id="refresh-preview" class="secondary" type="button">
+              プレビューを更新
+            </button>
+          </div>
+
+          <iframe
+            id="preview-frame"
+            title="公開前のプレビュー"
+            sandbox
+          ></iframe>
+        </div>
+
+        <div class="card">
+          <h3>バックアップと復元</h3>
+          <p class="hint">
+            文章や設定をJSONファイルに保存します。
+            アップロード済みの作品ファイルや画像ファイル自体は含まれません。
+          </p>
+
+          <button id="export-backup" class="secondary" type="button">
+            バックアップを保存
+          </button>
+
+          <label>
+            バックアップファイルを選択
+            <input id="backup-file" type="file" accept=".json,application/json">
+          </label>
+
+          <button id="import-backup" class="secondary" type="button">
+            バックアップを読み込む
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>保存と公開</h3>
+          <p class="hint">
+            編集内容はこのブラウザーに下書きとして保存されます。
+            サイトへの公開には、下のボタンを押してください。
+          </p>
+
+          <div class="actions">
+            <button id="save" type="button">変更を保存して公開</button>
+            <button id="discard-draft" class="danger" type="button">
+              下書きを破棄
+            </button>
+          </div>
+
+          <p id="draft-status" class="hint" role="status"></p>
+        </div>
+      </div>
+
+      <p id="status" class="status" role="status"></p>
+    </div>
+  </main>
+
+
+  <script src="./analytics-config.js"></script>\n  <script>
+    const $ = (id) => document.getElementById(id);
+    const initialData = {
+      siteName: "マイサイト", profile: "", profileName: "", profileIcon: "",
+      works: [], posts: [], contact: { email: "", socialName: "", socialUrl: "" }
+    };
+    let data = initialData;
+
+    function safeUrl(value) {
+      try {
+        const url = new URL(value, location.href);
+        return ["https:", "http:"].includes(url.protocol) ? url.href : null;
+      } catch { return null; }
+    }
+    function node(tag, text, cls) {
+      const el = document.createElement(tag);
+      if (text !== undefined) el.textContent = String(text);
+      if (cls) el.className = cls;
+      return el;
+    }
+    function link(parent, href, text) {
+      const url = safeUrl(href);
+      if (!url) return;
+      const a = node("a", text); a.href = url; a.target = "_blank";
+      a.rel = "noopener noreferrer"; parent.append(a);
+    }
+    function categories(select, items) {
+      const values = [...new Set(items.map(x => String(x.category || "").trim()).filter(Boolean))].sort();
+      select.replaceChildren();
+      const all = node("option", "すべて"); all.value = ""; select.append(all);
+      values.forEach(v => { const o=node("option",v); o.value=v; select.append(o); });
+    }
+    function matches(item, q, cat, keys) {
+      if (cat && String(item.category || "") !== cat) return false;
+      return keys.map(k => String(item[k] || "")).join(" ").toLowerCase().includes(q.trim().toLowerCase());
+    }
+    function render() {
+      document.title = data.siteName || "マイサイト";
+      $("site-name").textContent = data.siteName || "マイサイト";
+      $("profile").textContent = data.profile || "";
+      $("profile-name").textContent = data.profileName || "";
+      $("profile-name").hidden = !data.profileName;
+      const icon = safeUrl(data.profileIcon || "");
+      if (icon) { $("profile-icon").src=icon; $("profile-icon").hidden=false; }
+      else { $("profile-icon").hidden=true; $("profile-icon").removeAttribute("src"); }
+
+      const works = Array.isArray(data.works) ? data.works : [];
+      const posts = Array.isArray(data.posts) ? data.posts : [];
+      $("works-section").hidden = !works.length;
+      $("blog-section").hidden = !posts.length;
+      categories($("work-category"), works); categories($("post-category"), posts);
+
+      function drawWorks() {
+        const box=$("works"); box.replaceChildren();
+        const items=works.filter(x=>matches(x,$("work-search").value,$("work-category").value,["title","description","category"]));
+        items.forEach(w=>{
+          const card=node("article",undefined,"card"); card.append(node("h3",w.title||"無題"));
+          if(w.category) card.append(node("p",w.category,"hint"));
+          card.append(node("p",w.description||"","multiline")); link(card,w.file,"ファイルを開く・ダウンロード"); box.append(card);
+        });
+        $("works-empty").hidden=items.length>0;
+      }
+      function drawPosts() {
+        const box=$("posts"); box.replaceChildren();
+        const items=posts.filter(x=>matches(x,$("post-search").value,$("post-category").value,["title","body","category"]));
+        items.forEach(p=>{
+          const card=node("article",undefined,"card"); card.append(node("h3",p.title||"無題"));
+          if(p.date) card.append(node("p",p.date,"hint"));
+          if(p.category) card.append(node("p",p.category,"hint"));
+          card.append(node("p",p.body||"","multiline")); box.append(card);
+        });
+        $("posts-empty").hidden=items.length>0;
+      }
+      drawWorks(); drawPosts();
+
+      const contact=$("contact"); contact.replaceChildren();
+      const email=String(data.contact?.email||"").trim();
+      if(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        const p=node("p"); const a=node("a",email); a.href="mailto:"+email; p.append("メール：",a); contact.append(p);
+      }
+      if(data.contact?.socialUrl) { const p=node("p"); link(p,data.contact.socialUrl,data.contact.socialName||"SNSを開く"); contact.append(p); }
+      if(!contact.hasChildNodes()) contact.append(node("p","お問い合わせ先はまだ登録されていません。"));
+    }
+    function showSection(id) {
+      const ids=["about","works-section","blog-section","contact-section"];
+      const selected=ids.includes(id)?id:"about";
+      ids.forEach(x=>$(x).hidden=x!==selected);
+      document.querySelectorAll(".site-nav a").forEach(a=>{
+        if(a.getAttribute("href")==="#"+selected) a.setAttribute("aria-current","page");
+        else a.removeAttribute("aria-current");
+      });
+    }
+    $("work-search").addEventListener("input",render);
+    $("work-category").addEventListener("change",render);
+    $("post-search").addEventListener("input",render);
+    $("post-category").addEventListener("change",render);
+    window.addEventListener("hashchange",()=>showSection(location.hash.slice(1)));
+    async function load() {
+      try {
+        const r=await fetch("./site-data.json",{cache:"no-store"});
+        if(r.ok) {
+          const v=await r.json();
+          data={...initialData,...v,contact:{...initialData.contact,...(v.contact||{})}};
+        }
+      } catch(e) { console.warn("サイトデータを読み込めませんでした",e); }
+      render(); showSection(location.hash.slice(1));
+      // Optional privacy-friendly aggregate counter. No cookies or personal identifiers.
+      const api=window.SITE_ANALYTICS_ENDPOINT;
+      if(api) fetch(api.replace(/\/$/,"")+"/api/analytics/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:location.pathname}),keepalive:true}).catch(()=>{});
+    }
+    load();
+  </script>
+</body>
+</html>
