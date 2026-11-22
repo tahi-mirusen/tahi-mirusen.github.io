@@ -3,10 +3,10 @@
   "profile": "私はスクラッチをやっています。\nスクラッチのファイルや個人的にやりたいことをやります",
   "works": [
     {
-      "title": "クソゲー１弾！",
-      "description": "Google翻訳で無理やり、作った避けるゲームです。\n操作方法とかめんどくさいの書きません。\nでもモバイル対応してないと思います。",
-      "category": "スクラッチ",
-      "file": "uploads/dadd9789-349f-4921-a1a1-24157126f70d.sb3"
+      "title": "あ",
+      "description": "",
+      "category": "",
+      "file": "uploads/a8ffbd5e-5efd-421f-a05c-722bd41734f5.sb3"
     }
   ],
   "posts": [
@@ -24,7 +24,7 @@
       "title": "ああこんにちは",
       "date": "1919/8/10",
       "category": "自己紹介",
-      "body": "# どうも皆さんこんにちは私です\n\nということで私自己紹介をしたいと思いまーす\n\n年齢は1から100歳のどれかで、\nどこに住んでいるかというと、関東です。\n趣味はパソコンと地震観察かな\nパソコンは15万円のでぇす\n\nまあこれから色々やっていこうと思うのでね\nスクラッチのフォローよろぴく\n[スクラッチ（外部リンク）](https://scratch.mit.edu/users/aakonnitiha-_-/)\nほんならばい",
+      "body": "# どうも皆さんこんにちは私です\n\nということで私自己紹介をしたいと思いまーす\n\n年齢は1から100歳のどれかで、\nどこに住んでいるかというと、関東です。\n趣味はパソコンと地震観察かな\nパソコンは15万円のでぇす\nスペックはこんな感じ\nRyzen7 5700x\n16GB\nRTX4060\n500GB\n\nSSDが弱いのとメモリが弱いのでこれを強くすればほぼなんでも行けるスペックって感じ、\nまあこれから色々やっていこうと思うのでね\nスクラッチのフォローよろぴく\n[スクラッチ（外部リンク）](https://scratch.mit.edu/users/aakonnitiha-_-/)\nほんならばい",
       "id": "entry-g6vvtr",
       "format": "markdown"
     }
@@ -37,10 +37,6 @@
       {
         "name": "lit.link",
         "url": "https://lit.link/aakonnitiha-_-/"
-      },
-      {
-        "name": "スクラッチ",
-        "url": "https://scratch.mit.edu/users/aakonnitiha-_-/"
       }
     ]
   }
