@@ -513,15 +513,10 @@
             <input id="edit-email" type="email">
           </label>
 
-          <label>
-            SNSの名前
-            <input id="edit-social-name" placeholder="例：Instagram">
-          </label>
-
-          <label>
-            SNSのURL
-            <input id="edit-social-url" type="url" placeholder="https://">
-          </label>
+          <h4>SNSリンク</h4>
+          <p class="hint">名前とURLを入力してください。名前を空欄にすると、URLのドメイン名が表示されます。</p>
+          <div id="social-editor"></div>
+          <button id="add-social" type="button" class="secondary">SNSリンクを追加</button>
         </div>
 
         <div id="admin-preview" class="card" data-admin-panel hidden>
@@ -601,8 +596,7 @@
       posts: [],
       contact: {
         email: "",
-        socialName: "",
-        socialUrl: ""
+        socials: []
       }
     });
 
@@ -632,10 +626,28 @@
         contact: {
           ...contact,
           email: String(contact.email ?? ""),
-          socialName: String(contact.socialName ?? ""),
-          socialUrl: String(contact.socialUrl ?? "")
+          socials: normalizeSocials(contact)
         }
       };
+    }
+
+    function normalizeSocials(contact) {
+      const legacy = { name: contact.socialName, url: contact.socialUrl };
+      const links = Array.isArray(contact.socials) ? contact.socials : [legacy];
+      return links.filter((link) => link && typeof link === "object").map((link) => ({
+        name: String(link.name ?? ""),
+        url: String(link.url ?? "")
+      })).filter((link) => link.name.trim() || link.url.trim());
+    }
+
+    function socialLink(value) {
+      try {
+        const url = new URL(value.trim());
+        return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password
+          ? url : null;
+      } catch {
+        return null;
+      }
     }
 
     function normalizePosts(posts) {
@@ -1009,7 +1021,6 @@
       container.replaceChildren();
 
       const email = data.contact.email.trim();
-      const socialUrl = safeLink(data.contact.socialUrl);
 
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         const paragraph = element("p");
@@ -1019,17 +1030,13 @@
         container.append(paragraph);
       }
 
-      if (socialUrl) {
+      data.contact.socials.forEach((social) => {
+        const url = socialLink(social.url);
+        if (!url) return;
         const paragraph = element("p");
-        appendLink(
-          paragraph,
-          socialUrl,
-          data.contact.socialName.trim()
-            ? data.contact.socialName.trim()
-            : "SNSを開く"
-        );
+        appendLink(paragraph, url.href, social.name.trim() || url.hostname);
         container.append(paragraph);
-      }
+      });
 
       if (!container.hasChildNodes()) {
         container.append(element("p", "お問い合わせ先はまだ登録されていません。"));
@@ -1220,14 +1227,43 @@
       return details;
     }
 
+    function renderSocialEditor() {
+      const list = $("social-editor");
+      list.replaceChildren();
+      data.contact.socials.forEach((social, index) => {
+        const row = element("div", undefined, "editor-item");
+        row.append(element("h5", `SNSリンク ${index + 1}`));
+        const name = field(row, "SNSの名前", social.name, (value) => { social.name = value; });
+        name.placeholder = "例：Instagram";
+        const url = field(row, "SNSのURL", social.url, (value) => { social.url = value; });
+        url.type = "url";
+        url.placeholder = "https://";
+        const remove = element("button", "このリンクを削除", "danger");
+        remove.type = "button";
+        remove.addEventListener("click", () => {
+          data.contact.socials.splice(index, 1);
+          saveDraft();
+          renderSocialEditor();
+          $("add-social").focus();
+        });
+        row.append(remove);
+        list.append(row);
+      });
+    }
+
+    $("add-social").addEventListener("click", () => {
+      data.contact.socials.push({ name: "", url: "" });
+      renderSocialEditor();
+      $("social-editor").lastElementChild.querySelector("input").focus();
+    });
+
     function renderEditors() {
       $("edit-name").value = data.siteName;
       $("edit-profile-name").value = data.profileName;
       $("edit-profile-icon").value = data.profileIcon;
       $("edit-profile").value = data.profile;
       $("edit-email").value = data.contact.email;
-      $("edit-social-name").value = data.contact.socialName;
-      $("edit-social-url").value = data.contact.socialUrl;
+      renderSocialEditor();
 
       const workEditor = $("work-editor");
       workEditor.replaceChildren();
@@ -1516,7 +1552,8 @@
         );
       }
 
-      const json = JSON.stringify(data, null, 2);
+      const { socialName, socialUrl, ...contact } = data.contact;
+      const json = JSON.stringify({ ...data, contact: { ...contact, socials: normalizeSocials(contact) } }, null, 2);
       const content = bytesToBase64(new TextEncoder().encode(json));
 
       const body = {
@@ -1643,12 +1680,6 @@
       }],
       ["edit-email", (value) => {
         data.contact.email = value;
-      }],
-      ["edit-social-name", (value) => {
-        data.contact.socialName = value;
-      }],
-      ["edit-social-url", (value) => {
-        data.contact.socialUrl = value;
       }]
     ].forEach(([id, update]) => {
       $(id).addEventListener("input", (event) => {
@@ -1924,6 +1955,16 @@
     $("save").addEventListener("click", async () => {
       if (!connection) return;
       if (busy) return;
+
+      const invalid = data.contact.socials.findIndex((link) =>
+        (link.name.trim() || link.url.trim()) && !socialLink(link.url)
+      );
+      if (invalid !== -1) {
+        showAdminSection("admin-contact");
+        setStatus(`SNSリンク ${invalid + 1} のURLを http:// または https:// から入力してください。`);
+        $("social-editor").children[invalid].querySelector('input[type="url"]').focus();
+        return;
+      }
 
       setBusy(true);
       setStatus("変更を保存しています…");
