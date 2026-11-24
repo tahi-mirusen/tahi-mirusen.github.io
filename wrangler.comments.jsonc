@@ -1,0 +1,12 @@
+{
+  "name": "tahi-blog-comments",
+  "main": "comments-worker.mjs",
+  "compatibility_date": "2026-11-22",
+  "workers_dev": true,
+  "preview_urls": false,
+  "d1_databases": [{
+    "binding": "COMMENTS",
+    "database_name": "tahi-blog-comments",
+    "database_id": "f9561234-c370-4356-b181-1e15913d43ab"
+  }]
+}
